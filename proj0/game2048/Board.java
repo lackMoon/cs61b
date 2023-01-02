@@ -103,6 +103,19 @@ public class Board implements Iterable<Tile> {
         }
     }
 
+    /**
+     * Returns whether value of the adjacent tile is same with given tile or not.
+     * */
+    public boolean isSameWithAdjacent(Tile tile, int size){
+        int col = tile.col();
+        int row = tile.row();
+        boolean upFlag = (row == size-1) ? false : tile.isSameWithTile(values[col][row+1]);
+        boolean downFlag = (row == 0) ? false : tile.isSameWithTile(values[col][row-1]);
+        boolean leftFlag = (col == 0) ? false : tile.isSameWithTile(values[col-1][row]);
+        boolean rightFlag = (col == size-1) ? false : tile.isSameWithTile(values[col+1][row]);
+        return upFlag || downFlag || leftFlag || rightFlag;
+    }
+
     @Override
     /** Returns the board as a string, used for debugging. */
     public String toString() {

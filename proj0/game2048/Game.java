@@ -41,6 +41,7 @@ public class Game {
                         return;
                     case "New Game":
                         return;
+                    case "W": case "S": case "A": case "D":
                     case "Up": case "Down": case "Left": case "Right":
                     case "\u2190": case "\u2191": case "\u2192": case "\u2193":
                         if (!_model.gameOver() && _model.tilt(keyToSide(cmnd))) {
@@ -60,13 +61,13 @@ public class Game {
      *  or "Right"). */
     private Side keyToSide(String key) {
         switch (key) {
-            case "Up": case "\u2191":
+            case "W": case "Up": case "\u2191":
                 return NORTH;
-            case "Down": case "\u2193":
+            case "S": case "Down": case "\u2193":
                 return SOUTH;
-            case "Left": case "\u2190":
+            case "A": case "Left": case "\u2190":
                 return WEST;
-            case "Right": case "\u2192":
+            case "D": case "Right": case "\u2192":
                 return EAST;
             default:
                 throw new IllegalArgumentException("unknown key designation");

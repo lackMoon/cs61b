@@ -41,6 +41,8 @@ public class Tile {
         return new Tile(value, col, row);
     }
 
+    /** Return true if value of the given tile is same with value*/
+    public boolean isSameWithTile(Tile tile) { return tile!=null && this.value == tile.value; }
     /** Return the result of moving me to (COL, ROW). */
     public Tile move(int col, int row) {
         Tile result = new Tile(value, col, row);
