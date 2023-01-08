@@ -1,6 +1,8 @@
 package timingtest;
 import edu.princeton.cs.algs4.Stopwatch;
 
+import java.util.Arrays;
+
 /**
  * Created by hug.
  */
@@ -23,5 +25,21 @@ public class TimeAList {
 
     public static void timeAListConstruction() {
         // TODO: YOUR CODE HERE
+        int[] amounts = new int[]{1000,2000,4000,8000,16000,32000,64000,128000};
+        AList<Integer> Ns = new AList<>();
+        AList<Double> times = new AList<>();
+        AList<Integer> opCounts = new AList<>();
+        for (int amount : amounts) {
+            AList<Integer> timing = new AList<>();
+            Stopwatch sw = new Stopwatch();
+            for (int i = 0;i<amount;i++) {
+                timing.addLast(i);
+            }
+            double timeInSeconds = sw.elapsedTime();
+            Ns.addLast(timing.size());
+            times.addLast(timeInSeconds);
+            opCounts.addLast(amount);
+        }
+        printTimingTable(Ns,times,opCounts);
     }
 }
