@@ -198,7 +198,7 @@ public class Model extends Observable {
                 if (tile == null) {
                     return true;
                 }
-                if(b.isSameWithAdjacent(tile,size)){
+                if(isSameWithAdjacentTile(b,tile,size)){
                     return true;
                 }
             }
@@ -244,4 +244,20 @@ public class Model extends Observable {
     public int hashCode() {
         return toString().hashCode();
     }
+
+    /**
+     * Returns whether value of the adjacent tile is same with given tile or not.
+     * */
+    public static boolean isSameWithAdjacentTile(Board board,Tile tile, int size){
+        int col = tile.col();
+        int row = tile.row();
+        boolean upFlag = (row == size-1) ? false : tileEquals(tile,board.tile(col, row+1));
+        boolean downFlag = (row == 0) ? false : tileEquals(tile,board.tile(col, row-1));
+        boolean leftFlag = (col == 0) ? false : tileEquals(tile,board.tile(col-1, row));
+        boolean rightFlag = (col == size-1) ? false : tileEquals(tile,board.tile(col+1, row));
+        return upFlag || downFlag || leftFlag || rightFlag;
+    }
+
+    /** Return true if value of the given tile is same with value*/
+    public static boolean tileEquals(Tile a,Tile b) { return a!=null && b!=null && a.value() == b.value(); }
 }
