@@ -12,14 +12,6 @@ public class DebugExercise2 {
            step out button because you're not going to learn anything. */
         int z = ~(b - a) >> 31;
 
-        int max = b & w | a & z;
-        return max;
-    }
-
-    public static int maxRewrite(int a, int b) {
-        int w = (b - a) >> 31;
-        int z = ~(b - a) >> 31;
-
         int max = b & z | a & w;
         return max;
     }
@@ -55,7 +47,7 @@ public class DebugExercise2 {
         }
         int[] returnArray = new int[a.length];
         for (int i = 0; i < a.length; i += 1) {
-            int biggerValue = maxRewrite(a[i], b[i]);
+            int biggerValue = max(a[i], b[i]);
             returnArray[i] = biggerValue;
         }
 
