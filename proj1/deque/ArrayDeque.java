@@ -124,9 +124,9 @@ public class ArrayDeque<T> implements Deque<T> {
 
     @Override
     public T get(int index) {
-        if(index > capacity || index < 0){
+        if(index > capacity || index <= 0){
             return null;
         }
-        return items[index]==null?null:items[index];
+        return items[index-1]==null?null:items[index-1];
     }
 }
