@@ -2,7 +2,8 @@ package deque;
 
 public class ArrayDeque<T> implements Deque<T> {
 
-    private int capacity = 8;
+    public static final int INIT_CAPACITY = 8;
+    private int capacity = INIT_CAPACITY;
     private int size;
     private int nextFirst;
     private int nextLast;
@@ -10,7 +11,7 @@ public class ArrayDeque<T> implements Deque<T> {
 
     public ArrayDeque(){
         items = (T[])new Object[capacity];
-        size = 8;
+        size = 0;
         nextFirst = 0;
         nextLast = 0;
     }
@@ -100,7 +101,7 @@ public class ArrayDeque<T> implements Deque<T> {
         T delItem=items[nextFirst];
         items[nextFirst]=null;
         size--;
-        if(size!=0&& getUsage() < 0.25){
+        if(size!=0&&getUsage()<0.25){
             resize(capacity>>1);
         }
         return delItem;
@@ -123,9 +124,9 @@ public class ArrayDeque<T> implements Deque<T> {
 
     @Override
     public T get(int index) {
-        if(index>capacity){
+        if(index > capacity || index < 0){
             return null;
         }
-        return items[index-1]==null?null:items[index-1];
+        return items[index]==null?null:items[index];
     }
 }
