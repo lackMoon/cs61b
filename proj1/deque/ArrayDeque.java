@@ -12,7 +12,7 @@ public class ArrayDeque<T> implements Deque<T> {
     public ArrayDeque(){
         items = (T[])new Object[capacity];
         size = 0;
-        nextFirst = 0;
+        nextFirst = capacity - 1;
         nextLast = 0;
     }
 
@@ -23,9 +23,9 @@ public class ArrayDeque<T> implements Deque<T> {
 
     private void arrayCopy(T[] src,T[] dest){
         int oldCapacity=src.length;
-        int startIndex =nextFirst+1==oldCapacity?0:nextFirst+1;
-        int endIndex = nextLast-1<0?oldCapacity-1:nextLast-1;
-        if(startIndex<=endIndex){
+        int startIndex = nextFirst+1 == oldCapacity ? 0 : nextFirst+1;
+        int endIndex = nextLast-1 < 0 ? oldCapacity-1 : nextLast-1;
+        if(startIndex <= endIndex){
             System.arraycopy(src,startIndex,dest,0,size);
         }else {
             int len = oldCapacity-startIndex;
@@ -40,16 +40,13 @@ public class ArrayDeque<T> implements Deque<T> {
         items = (T[])new Object[capacity];
         arrayCopy(oldItems,items);
         nextFirst = capacity-1;
-        nextLast=size;
+        nextLast = size;
     }
 
     @Override
     public void addFirst(T item) {
-        if(size==0){
-            nextLast++;
-        }
         items[nextFirst]=item;
-        nextFirst=nextFirst-1<0?capacity-1:nextFirst-1;
+        nextFirst = nextFirst-1 < 0 ? capacity-1 : nextFirst-1;
         size++;
         if(size==capacity){
             resize(size<<1);
@@ -58,9 +55,6 @@ public class ArrayDeque<T> implements Deque<T> {
 
     @Override
     public void addLast(T item) {
-        if(size==0){
-            nextFirst=capacity-1;
-        }
         items[nextLast]=item;
         nextLast=nextLast+1==capacity?0:nextLast+1;
         size++;
@@ -124,9 +118,9 @@ public class ArrayDeque<T> implements Deque<T> {
 
     @Override
     public T get(int index) {
-        if(index > capacity || index <= 0){
+        if(index > capacity || index < 0){
             return null;
         }
-        return items[index-1]==null?null:items[index-1];
+        return items[index]==null?null:items[index];
     }
 }
