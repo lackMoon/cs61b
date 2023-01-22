@@ -2,7 +2,7 @@ package deque;
 
 import java.util.Iterator;
 
-public class ArrayDeque<T> implements Deque<T> {
+public class ArrayDeque<T> implements Deque<T>,Iterable<T> {
 
     public static final int INIT_CAPACITY = 8;
     private int capacity = INIT_CAPACITY;
@@ -109,6 +109,14 @@ public class ArrayDeque<T> implements Deque<T> {
         int virtualIndex = nextFirst + index + 1;
         int actualIndex = virtualIndex < capacity ? virtualIndex : virtualIndex - capacity;
         return items[actualIndex]==null?null:items[actualIndex];
+    }
+
+    public void printDeque() {
+        for (T item: this) {
+            System.out.print(item);
+            System.out.print(" ");
+        }
+        System.out.println();
     }
 
     @Override

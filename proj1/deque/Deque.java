@@ -1,7 +1,7 @@
 package deque;
 
 
-public interface Deque<T> extends Iterable<T>{
+public interface Deque<T> {
     //Adds an item of type T to the front of the deque.
     public void addFirst(T item);
 
@@ -17,13 +17,7 @@ public interface Deque<T> extends Iterable<T>{
     public int size();
 
     //Prints the items in the deque from first to last, separated by a space.
-    public default void printDeque() {
-        for (T item: this) {
-            System.out.print(item);
-            System.out.print(" ");
-        }
-        System.out.println();
-    }
+    public void printDeque();
 
     //Removes and returns the item at the front of the deque. If no such item exists, returns null.
     public T removeFirst();
