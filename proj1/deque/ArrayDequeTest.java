@@ -50,6 +50,18 @@ public class ArrayDequeTest {
 
 		ad1.printDeque();
 
+		assertEquals(10, ad1.size());
+
+		assertEquals("Deque31", ad1.get(0));
+
+		assertEquals("Deque1", ad1.get(3));
+
+		assertEquals("Deque5", ad1.get(7));
+
+		assertEquals("Deque6", ad1.get(8));
+
+		assertEquals("Deque9", ad1.get(9));
+
 	}
 
 	/** Adds an item, then removes an item, and ensures that dll is empty afterwards. */

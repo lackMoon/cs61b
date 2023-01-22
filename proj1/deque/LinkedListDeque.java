@@ -2,14 +2,9 @@ package deque;
 
 import java.util.Iterator;
 
-public class LinkedListDeque<T> implements Deque<T>,Iterable<T> {
+public class LinkedListDeque<T> implements Deque<T> {
     private LinkedNode<T> sentinel;
     private int size = 0;
-
-    @Override
-    public Iterator<T> iterator() {
-        return null;
-    }
 
     private static class LinkedNode<T> {
         private T item;
@@ -58,25 +53,10 @@ public class LinkedListDeque<T> implements Deque<T>,Iterable<T> {
     }
 
     @Override
-    public boolean isEmpty() {
-        return sentinel.next==null?true:false;
-    }
-
-    @Override
     public int size() {
         return size;
     }
 
-    @Override
-    public void printDeque() {
-        LinkedNode<T> currentNode = sentinel.next;
-        while (currentNode!=sentinel){
-            System.out.print(currentNode.item);
-            System.out.print(" ");
-            currentNode=currentNode.next;
-        }
-        System.out.println();
-    }
 
     @Override
     public T removeFirst() {
@@ -143,4 +123,41 @@ public class LinkedListDeque<T> implements Deque<T>,Iterable<T> {
         }
     }
 
+    @Override
+    public Iterator<T> iterator() {
+        return new LinkedListDequeIterator<T>();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof Deque) {
+            for (int i = 0; i < size; i++) {
+                if (get(i) != ((Deque<T>) o).get(i)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+
+    private class LinkedListDequeIterator<T> implements Iterator<T> {
+
+        private LinkedNode<T> currentNode;
+
+        public LinkedListDequeIterator() {
+            currentNode = (LinkedNode<T>) sentinel.next;
+        }
+        @Override
+        public boolean hasNext() {
+            return currentNode != sentinel;
+        }
+
+        @Override
+        public T next() {
+            T nextVaule = currentNode.item;
+            currentNode = currentNode.next;
+            return currentNode.item;
+        }
+    }
 }

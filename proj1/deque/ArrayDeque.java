@@ -1,5 +1,7 @@
 package deque;
 
+import java.util.Iterator;
+
 public class ArrayDeque<T> implements Deque<T> {
 
     public static final int INIT_CAPACITY = 8;
@@ -64,34 +66,17 @@ public class ArrayDeque<T> implements Deque<T> {
     }
 
     @Override
-    public boolean isEmpty() {
-        return size==0?true:false;
-    }
-
-    @Override
     public int size() {
         return size;
     }
 
-    @Override
-    public void printDeque() {
-        int firstIndex = nextFirst+1==capacity?0:nextFirst+1;
-        int count=0;
-        while (count<size){
-            System.out.print(items[firstIndex]);
-            System.out.print(" ");
-            firstIndex = firstIndex+1==capacity?0:firstIndex+1;
-            count++;
-        }
-        System.out.println();
-    }
 
     @Override
     public T removeFirst() {
         if(size==0){
             return null;
         }
-        nextFirst=nextFirst+1==capacity?0:nextFirst+1;
+        nextFirst=nextFirst+1 == capacity ? 0:nextFirst+1;
         T delItem=items[nextFirst];
         items[nextFirst]=null;
         size--;
@@ -106,11 +91,11 @@ public class ArrayDeque<T> implements Deque<T> {
         if(size==0){
             return null;
         }
-        nextLast=nextLast-1<0?capacity-1:nextLast-1;
+        nextLast = nextLast-1 < 0 ? capacity-1 : nextLast-1;
         T delItem=items[nextLast];
         items[nextLast]=null;
         size--;
-        if(size!=0&&getUsage()<0.25){
+        if(size!=0 && getUsage()<0.25){
             resize(capacity>>1);
         }
         return delItem;
@@ -118,9 +103,53 @@ public class ArrayDeque<T> implements Deque<T> {
 
     @Override
     public T get(int index) {
-        if(index > capacity || index < 0){
+        if(index >= capacity || index < 0){
             return null;
         }
-        return items[index]==null?null:items[index];
+        int virtualIndex = nextFirst + index + 1;
+        int actualIndex = virtualIndex < capacity ? virtualIndex : virtualIndex - capacity;
+        return items[actualIndex]==null?null:items[actualIndex];
+    }
+
+    @Override
+    public Iterator<T> iterator() {
+        return new ArrayDequeIterator<T>();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof Deque) {
+            for (int i = 0; i < size; i++) {
+                if (get(i) != ((Deque<T>) o).get(i)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+
+    private class ArrayDequeIterator<T> implements Iterator<T> {
+
+        private int index;
+
+        private  int count;
+        public ArrayDequeIterator() {
+            index = nextFirst + 1 == capacity ? 0 : nextFirst + 1;
+            count = 0;
+        }
+        @Override
+        public boolean hasNext() {
+            return count < size;
+        }
+
+        @Override
+        public T next() {
+            T nextVaule = (T)items[index];
+            index = index + 1 == capacity ? 0 : index + 1;
+            count++;
+            return nextVaule;
+        }
+
     }
 }
