@@ -30,9 +30,9 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         if (startIndex <= endIndex) {
             System.arraycopy(src, startIndex, dest, 0, size);
         } else {
-            int len = oldCapacity-startIndex;
+            int len = oldCapacity - startIndex;
             System.arraycopy(src, startIndex, dest, 0, len);
-            System.arraycopy(src, 0, dest, len, size-len);
+            System.arraycopy(src, 0, dest, len, size - len);
         }
     }
 
@@ -50,7 +50,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         items[nextFirst] = item;
         nextFirst = nextFirst - 1 < 0 ? capacity - 1 : nextFirst - 1;
         size++;
-        if(size == capacity) {
+        if (size == capacity) {
             resize(size << 1);
         }
     }
@@ -60,7 +60,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         items[nextLast] = item;
         nextLast = nextLast + 1 == capacity ? 0 : nextLast + 1;
         size++;
-        if(size == capacity){
+        if (size == capacity) {
             resize(size << 1);
         }
     }
@@ -73,7 +73,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
 
     @Override
     public T removeFirst() {
-        if(isEmpty()) {
+        if (isEmpty()) {
             return null;
         }
         nextFirst = nextFirst + 1 == capacity ? 0 : nextFirst + 1;
@@ -95,7 +95,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         T delItem = items[nextLast];
         items[nextLast] = null;
         size--;
-        if(size != 0 && getUsage() < 0.25) {
+        if (size != 0 && getUsage() < 0.25) {
             resize(capacity >> 1);
         }
         return delItem;

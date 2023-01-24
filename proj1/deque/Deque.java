@@ -30,6 +30,7 @@ public interface Deque<T> {
     T get(int index);
 
     // Returns whether or not the parameter o is equal to the Deque.
-    // o is considered equal if it is a Deque and if it contains the same contents in the same order.
+    // o is considered equal if it is a Deque and
+    // if it contains the same contents in the same order.
     boolean equals(Object o);
 }
