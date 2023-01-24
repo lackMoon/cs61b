@@ -49,6 +49,10 @@ public class LinkedListDequeTest {
 		lld1.removeFirst();
 		// should be empty
 		assertTrue("lld1 should be empty after removal", lld1.isEmpty());
+
+        lld1.addFirst(3);
+
+        assertEquals(1,lld1.size());
     }
 
     @Test

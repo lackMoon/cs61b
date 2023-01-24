@@ -75,6 +75,11 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
             return null;
         }
         LinkedNode<T> firstNode = sentinel.next;
+        if (size == 1) {
+            sentinel.next = null;
+            size--;
+            return firstNode.item;
+        }
         firstNode.next.prev = firstNode.prev;
         firstNode.prev.next = firstNode.next;
         sentinel.next = firstNode.next;
@@ -90,6 +95,11 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
             return null;
         }
         LinkedNode<T> lastNode = sentinel.next.prev;
+        if (size == 1) {
+            sentinel.next = null;
+            size--;
+            return lastNode.item;
+        }
         lastNode.next.prev = lastNode.prev;
         lastNode.prev.next = lastNode.next;
         lastNode.prev = null;
@@ -177,7 +187,7 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
             T nextVaule = currentNode.item;
             currentNode = currentNode.next;
             count++;
-            return currentNode.item;
+            return nextVaule;
         }
     }
 }
