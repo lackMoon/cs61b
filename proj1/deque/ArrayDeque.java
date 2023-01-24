@@ -5,13 +5,15 @@ import java.util.Iterator;
 public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
 
     private static final int INIT_CAPACITY = 8;
-    private int capacity = INIT_CAPACITY;
+
+    private int capacity;
     private int size;
     private int nextFirst;
     private int nextLast;
     private T[] items;
 
     public ArrayDeque() {
+        capacity = INIT_CAPACITY;
         items = (T[]) new Object[capacity];
         size = 0;
         nextFirst = capacity - 1;
@@ -22,15 +24,21 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         return (double) size / (double) capacity;
     }
 
+    private int getPrevIndex(int index) {
+        return index - 1 < 0 ? capacity - 1 : index - 1;
+    }
+
+    private int getNextIndex(int index) {
+        return index + 1 == capacity ? 0 : index + 1;
+    }
 
     private void arrayCopy(T[] src, T[] dest) {
-        int oldCapacity = src.length;
-        int startIndex = nextFirst + 1 == oldCapacity ? 0 : nextFirst + 1;
-        int endIndex = nextLast - 1 < 0 ? oldCapacity - 1 : nextLast - 1;
+        int startIndex = getNextIndex(nextFirst);
+        int endIndex = getPrevIndex(nextLast);
         if (startIndex <= endIndex) {
             System.arraycopy(src, startIndex, dest, 0, size);
         } else {
-            int len = oldCapacity - startIndex;
+            int len = capacity - startIndex;
             System.arraycopy(src, startIndex, dest, 0, len);
             System.arraycopy(src, 0, dest, len, size - len);
         }
@@ -38,9 +46,9 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
 
     private void resize(int newSize) {
         T[] oldItems = items;
-        capacity = newSize;
-        items = (T[]) new Object[capacity];
+        items = (T[]) new Object[newSize];
         arrayCopy(oldItems, items);
+        capacity = newSize;
         nextFirst = capacity - 1;
         nextLast = size;
     }
@@ -48,7 +56,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
     @Override
     public void addFirst(T item) {
         items[nextFirst] = item;
-        nextFirst = nextFirst - 1 < 0 ? capacity - 1 : nextFirst - 1;
+        nextFirst = getPrevIndex(nextFirst);
         size++;
         if (size == capacity) {
             resize(size << 1);
@@ -58,7 +66,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
     @Override
     public void addLast(T item) {
         items[nextLast] = item;
-        nextLast = nextLast + 1 == capacity ? 0 : nextLast + 1;
+        nextLast = getNextIndex(nextLast);
         size++;
         if (size == capacity) {
             resize(size << 1);
@@ -76,7 +84,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         if (isEmpty()) {
             return null;
         }
-        nextFirst = nextFirst + 1 == capacity ? 0 : nextFirst + 1;
+        nextFirst = getNextIndex(nextFirst);
         T delItem = items[nextFirst];
         items[nextFirst] = null;
         size--;
@@ -91,7 +99,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         if (isEmpty()) {
             return null;
         }
-        nextLast = nextLast - 1 < 0 ? capacity - 1 : nextLast - 1;
+        nextLast = getPrevIndex(nextLast);
         T delItem = items[nextLast];
         items[nextLast] = null;
         size--;
@@ -121,7 +129,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
 
     @Override
     public Iterator<T> iterator() {
-        return new ArrayDequeIterator<T>();
+        return new ArrayDequeIterator<>();
     }
 
     @Override
@@ -145,9 +153,9 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
 
         private int index;
 
-        private  int count;
+        private int count;
         ArrayDequeIterator() {
-            index = nextFirst + 1 == capacity ? 0 : nextFirst + 1;
+            index = getNextIndex(nextFirst);
             count = 0;
         }
         @Override
@@ -158,7 +166,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         @Override
         public T next() {
             T nextVaule = (T) items[index];
-            index = index + 1 == capacity ? 0 : index + 1;
+            index = getNextIndex(index);
             count++;
             return nextVaule;
         }
