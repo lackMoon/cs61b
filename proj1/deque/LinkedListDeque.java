@@ -29,25 +29,8 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
         sentinel = new LinkedNode(-1);
         size = 0;
     }
-    @Override
-    public void addFirst(T item) {
-        LinkedNode<T> newNode;
-        LinkedNode<T> firstNode = sentinel.next;
-        if (firstNode == null) {
-            newNode = new LinkedNode(item, null, null);
-            newNode.prev = newNode;
-            newNode.next = newNode;
-        } else {
-            newNode = new LinkedNode(item, firstNode.prev, firstNode);
-            firstNode.prev.next = newNode;
-            firstNode.prev = newNode;
-        }
-        sentinel.next = newNode;
-        size++;
-    }
 
-    @Override
-    public void addLast(T item) {
+    private LinkedNode<T> addNode(T item) {
         LinkedNode<T> newNode;
         LinkedNode<T> firstNode = sentinel.next;
         if (firstNode == null) {
@@ -61,6 +44,30 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
             firstNode.prev = newNode;
         }
         size++;
+        return newNode;
+    }
+
+    private T removeNode(LinkedNode<T> currentNode) {
+        T item = currentNode.item;
+        if (size == 1) {
+            sentinel.next = null;
+        } else {
+            currentNode.next.prev = currentNode.prev;
+            currentNode.prev.next = currentNode.next;
+            currentNode.prev = null;
+            currentNode.next = null;
+        }
+        size--;
+        return item;
+    }
+    @Override
+    public void addFirst(T item) {
+        sentinel.next = addNode(item);
+    }
+
+    @Override
+    public void addLast(T item) {
+        addNode(item);
     }
 
     @Override
@@ -75,18 +82,8 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
             return null;
         }
         LinkedNode<T> firstNode = sentinel.next;
-        if (size == 1) {
-            sentinel.next = null;
-            size--;
-            return firstNode.item;
-        }
-        firstNode.next.prev = firstNode.prev;
-        firstNode.prev.next = firstNode.next;
         sentinel.next = firstNode.next;
-        firstNode.prev = null;
-        firstNode.next = null;
-        size--;
-        return firstNode.item;
+        return removeNode(firstNode);
     }
 
     @Override
@@ -95,17 +92,7 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
             return null;
         }
         LinkedNode<T> lastNode = sentinel.next.prev;
-        if (size == 1) {
-            sentinel.next = null;
-            size--;
-            return lastNode.item;
-        }
-        lastNode.next.prev = lastNode.prev;
-        lastNode.prev.next = lastNode.next;
-        lastNode.prev = null;
-        lastNode.next = null;
-        size--;
-        return lastNode.item;
+        return removeNode(lastNode);
     }
 
     @Override
