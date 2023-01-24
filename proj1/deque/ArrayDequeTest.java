@@ -2,7 +2,9 @@ package deque;
 
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
+import java.util.HashSet;
+
+import static org.junit.Assert.*;
 
 /** Performs some basic linked list tests. */
 public class ArrayDequeTest {
@@ -168,6 +170,45 @@ public class ArrayDequeTest {
 
 		assertEquals(4, ad1.size());
 
+	}
+
+	@Test
+	public void isEqualTest() {
+		System.out.println("Running isEqual test.");
+
+		String[] testString = {"a", "b" , "c", "d", "e"};
+
+		ArrayDeque<String> eq = new ArrayDeque<String>();
+
+		HashSet<String> eq1 = new HashSet<String>();
+
+		ArrayDeque<String> eq2 = new ArrayDeque<String>();
+
+		ArrayDeque<String> eq3 = new ArrayDeque<String>();
+
+		ArrayDeque<String> eq4 = new ArrayDeque<String>();
+
+		for (String ts : testString) {
+			eq.addLast(ts);
+			eq1.add(ts);
+			eq2.addLast(ts);
+			eq3.addLast(ts);
+			eq4.addLast(ts);
+		}
+
+		assertFalse(eq.equals(eq1));
+
+		eq2.removeFirst();
+
+		assertFalse(eq.equals(eq2));
+
+		assertTrue(eq.equals(eq3));
+
+		eq4.removeLast();
+
+		eq4.addLast("h");
+
+		assertFalse(eq.equals(eq4));
 	}
 
 } 
