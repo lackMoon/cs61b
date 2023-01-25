@@ -165,10 +165,10 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
 
         @Override
         public T next() {
-            T nextVaule = (T) items[index];
+            T nextValue = (T) items[index];
             index = getNextIndex(index);
             count++;
-            return nextVaule;
+            return nextValue;
         }
 
     }

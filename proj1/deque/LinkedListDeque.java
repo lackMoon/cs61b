@@ -134,7 +134,7 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
 
     @Override
     public Iterator<T> iterator() {
-        return new LinkedListDequeIterator<T>();
+        return new LinkedListDequeIterator<>();
     }
 
     @Override

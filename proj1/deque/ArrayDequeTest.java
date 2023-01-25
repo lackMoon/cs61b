@@ -18,7 +18,7 @@ public class ArrayDequeTest {
 	public void addIsEmptySizeTest() {
 		System.out.println("Running add/isEmpty/Size test.");
 
-		ArrayDeque<String> ad1 = new ArrayDeque<String>();
+		ArrayDeque<String> ad1 = new ArrayDeque<>();
 
 		assertEquals(true, ad1.isEmpty());
 
@@ -72,7 +72,7 @@ public class ArrayDequeTest {
 
 		System.out.println("Running add/remove test.");
 
-		ArrayDeque<Integer> ad1 = new ArrayDeque<Integer>();
+		ArrayDeque<Integer> ad1 = new ArrayDeque<>();
 		// should be empty
 		assertEquals(true, ad1.isEmpty());
 
@@ -120,7 +120,7 @@ public class ArrayDequeTest {
 
 		System.out.println("Running add/remove test.");
 
-		ArrayDeque<Integer> ad1 = new ArrayDeque<Integer>();
+		ArrayDeque<Integer> ad1 = new ArrayDeque<>();
 		// should be empty
 		assertEquals(true, ad1.isEmpty());
 
@@ -178,7 +178,7 @@ public class ArrayDequeTest {
 
 		String[] testString = {"a", "b" , "c", "d", "e"};
 
-		ArrayDeque<String> eq = new ArrayDeque<String>();
+		ArrayDeque<String> eq = new ArrayDeque<>();
 
 		HashSet<String> eq1 = new HashSet<String>();
 
