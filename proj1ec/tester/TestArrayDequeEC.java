@@ -3,7 +3,6 @@ package tester;
 import static org.junit.Assert.*;
 
 import edu.princeton.cs.introcs.StdRandom;
-import jh61b.junit.In;
 import org.junit.Test;
 import student.StudentArrayDeque;
 
