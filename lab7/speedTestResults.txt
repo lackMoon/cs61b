@@ -1,0 +1,26 @@
+string length:          10
+strings nums:           20000  10000    5000    2500    1000
+ULLMap speed(random):   2.96   0.44     0.13    0.05    0.02
+BSTMap speed(random):   0.05   0.01     0.01    0.00    0.00
+TreeMap speed(random):  0.07   0.01     0.01    0.00    0.00
+HashMap speed(random):  0.04   0.01     0.00    0.00    0.00
+
+string length:          50
+strings nums:           20000  10000    5000    2500    1000
+ULLMap speed(random):   3.61   0.55     0.13    0.05    0.02
+BSTMap speed(random):   0.05   0.01     0.01    0.00    0.00
+TreeMap speed(random):  0.07   0.01     0.01    0.00    0.00
+HashMap speed(random):  0.04   0.01     0.00    0.00    0.00
+
+string length:          100
+strings nums(random):   20000  10000    5000    2500    1000
+ULLMap speed(random):   5.48   0.81     0.21    0.04    0.03
+BSTMap speed(random):   0.05   0.02     0.01    0.00    0.00
+TreeMap speed(random):  0.05   0.03     0.01    0.00    0.00
+HashMap speed(random):  0.04   0.02     0.01    0.00    0.00
+
+strings nums:           10000  5000     2500    1000    500
+ULLMap speed(order):    1.87   0.27     0.08    0.03    0.01
+BSTMap speed(order):    1.74   0.25     0.06    0.01    0.01
+TreeMap speed(order):   0.02   0.00     0.00    0.00    0.00
+HashMap speed(order):   0.01   0.00     0.00    0.00    0.00
