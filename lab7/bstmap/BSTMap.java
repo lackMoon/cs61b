@@ -7,8 +7,8 @@ import java.util.TreeSet;
 
 public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
 
-    public static final int PREDECESSOR = 0;
-    public static final int SUCCESSOR = 1;
+    private static final int PREDECESSOR = 0;
+    private static final int SUCCESSOR = 1;
 
     private BSTNode rootNode;
 
@@ -204,10 +204,16 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
         }
     }
 
-
     @Override
     public Iterator<K> iterator() {
         return keySet().iterator();
+    }
+
+    public void printInOrder() {
+        Iterator<K> iterator = iterator();
+        while (iterator.hasNext()) {
+            System.out.println(iterator.next());
+        }
     }
 
 }
