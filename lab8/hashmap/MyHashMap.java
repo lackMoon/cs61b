@@ -119,6 +119,16 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
             put(node.key, node.value);
         }
     }
+
+    private Set<Node> nodeSet() {
+        Set<Node> nodeSet = new HashSet();
+        for (int i = 0; i < size; i++) {
+            for (Node node : buckets[i]) {
+                nodeSet.add(node);
+            }
+        }
+        return nodeSet;
+    }
     private int hash(K key) {
         return key == null ? -1 : Math.floorMod(key.hashCode(), size);
     }
@@ -126,15 +136,8 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
     private Collection<Node> findBucket(K key) {
         return buckets[hash(key)];
     }
-    @Override
-    public void clear() {
-        this.items = 0;
-        for (int i = 0; i < size; i++) {
-            buckets[i] = createBucket();
-        }
-    }
 
-    protected Node find(K key) {
+    private Node find(K key) {
         Collection<Node> bucket = findBucket(key);
         if (bucket != null) {
             for (Node node : bucket) {
@@ -144,6 +147,14 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
             }
         }
         return null;
+    }
+
+    @Override
+    public void clear() {
+        this.items = 0;
+        for (int i = 0; i < size; i++) {
+            buckets[i] = createBucket();
+        }
     }
 
     @Override
@@ -166,7 +177,7 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
     public void put(K key, V value) {
         Collection<Node> bucket = findBucket(key);
         for (Node node : bucket) {
-            if (node.key == key) {
+            if (node.key.equals(key)) {
                 node.value = value;
                 return;
             }
@@ -178,15 +189,6 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
         }
     }
 
-    protected Set<Node> nodeSet() {
-        Set<Node> nodeSet = new HashSet();
-        for (int i = 0; i < size; i++) {
-            for (Node node : buckets[i]) {
-                nodeSet.add(node);
-            }
-        }
-        return nodeSet;
-    }
     @Override
     public Set<K> keySet() {
         Set<K> keySet = new HashSet();
