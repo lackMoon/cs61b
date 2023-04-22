@@ -3,6 +3,7 @@ package gitlet;
 import java.io.File;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Objects;
 
 import static gitlet.Utils.join;
@@ -34,7 +35,7 @@ class Projects {
         return cachedArray[index];
     }
 
-    static String getBranch() {
+    static String getCurrentBranch() {
         if (!isCached(BRANCH_INDEX)) {
             File head = Repository.HEAD;
             if (!head.exists()) {
@@ -55,7 +56,7 @@ class Projects {
 
     public static Commit getHeadCommit() {
         if (!isCached(COMMIT_INDEX)) {
-            String branchName = getBranch();
+            String branchName = getCurrentBranch();
             if (Objects.isNull(branchName)) {
                 return null;
             }
@@ -64,7 +65,7 @@ class Projects {
                 return null;
             }
             String headCommitId = Utils.readContentsAsString(branch);
-            Commit commit = Blob.convertBlobToObj(headCommitId, Commit.class);
+            Commit commit = Commit.acquire(headCommitId);
             headCommit = commit;
             cachedArray[COMMIT_INDEX] = true;
         }
@@ -72,7 +73,7 @@ class Projects {
     }
 
     static void updateHeadCommit(String commitId) {
-        String branchName = getBranch();
+        String branchName = getCurrentBranch();
         File branch = Utils.join(Repository.LOCAL, branchName);
         Utils.writeContents(branch, commitId);
         cachedArray[COMMIT_INDEX] = false;
@@ -95,5 +96,19 @@ class Projects {
         File index = Repository.INDEX;
         Utils.writeObject(index, stagingArea);
         cachedArray[STAGING_INDEX] = false;
+    }
+
+    static void addMessage(StringBuilder logMessage, Commit commit) {
+        logMessage.append("===");
+        logMessage.append(System.getProperty("line.separator"));
+        logMessage.append("commit " + commit.getCommitId());
+        logMessage.append(System.getProperty("line.separator"));
+        logMessage.append("Date: " + String.format(Locale.ENGLISH,
+                "%1$ta %1$tb %1$te %1$tH:%1$tM:%1$tS %1$tY %1$tz",
+                commit.getTimeStamp()));
+        logMessage.append(System.getProperty("line.separator"));
+        logMessage.append(commit.getMessage());
+        logMessage.append(System.getProperty("line.separator"));
+        logMessage.append(System.getProperty("line.separator"));
     }
 }

@@ -11,38 +11,21 @@ import static gitlet.Utils.*;
  *
  */
 class Blob {
-    static String findBlobId(String prefix) {
-        File dict = join(Repository.OBJECTS_DIR, prefix.substring(0, 2));
-        if (!dict.exists()) {
-            return null;
-        }
-        List<String> blobList = Utils.plainFilenamesIn(dict);
-        for (String blob : blobList) {
-            if (blob.startsWith(prefix)) {
-                return blob;
-            }
-        }
-        return null;
-    }
-    static File convertObjToBlob(Serializable obj) {
-        String blobId = obj instanceof File
-                ? sha1(Utils.readContentsAsString((File) obj)) : sha1(serialize(obj));
+
+    static String Blob(File file) {
+        String blobId = sha1(Utils.readContentsAsString(file));
         File dict = join(Repository.OBJECTS_DIR, blobId.substring(0, 2));
         if (!dict.exists()) {
             dict.mkdir();
         }
         File blobFile = join(dict, blobId);
         if (!blobFile.exists()) {
-            if (obj instanceof File) {
-                Utils.writeContents(blobFile, Utils.readContents((File) obj));
-            } else {
-                Utils.writeObject(blobFile, obj);
-            }
+            Utils.writeContents(blobFile, Utils.readContents(file));
         }
-        return blobFile;
+        return blobId;
     }
 
-    static <T extends Serializable> T convertBlobToObj(String blobId, Class<T> expectedClass) {
+    static String content(String blobId) {
         File dict = join(Repository.OBJECTS_DIR, blobId.substring(0, 2));
         if (!dict.exists()) {
             return null;
@@ -51,11 +34,7 @@ class Blob {
         if (!blobFile.exists()) {
             return null;
         }
-        if (expectedClass.isAssignableFrom(String.class)) {
-            return (T) Utils.readContentsAsString(blobFile);
-        } else {
-            return Utils.readObject(blobFile, expectedClass);
-        }
+        return Utils.readContentsAsString(blobFile);
     }
 
 }

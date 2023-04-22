@@ -2,10 +2,8 @@ package gitlet;
 
 import java.io.File;
 import java.io.Serializable;
-import java.util.Date;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.Objects;
+import java.util.*;
+
 import static gitlet.Utils.*;
 
 /** Represents a gitlet commit object.
@@ -46,28 +44,29 @@ public class Commit implements Serializable {
         }
     }
 
-    public String getMessage() {
-        return message;
+    public String save() {
+        String blobId = this.getCommitId();
+        File dict = join(Repository.COMMITS_DIR, blobId.substring(0, 2));
+        if (!dict.exists()) {
+            dict.mkdir();
+        }
+        File blobFile = join(dict, blobId);
+        if (!blobFile.exists()) {
+            Utils.writeObject(blobFile, this);
+        }
+        return blobId;
     }
 
-    public void setMessage(String message) {
-        this.message = message;
+    public String getMessage() {
+        return message;
     }
 
     public Date getTimeStamp() {
         return timeStamp;
     }
 
-    public void setTimeStamp(Date timeStamp) {
-        this.timeStamp = timeStamp;
-    }
-
     public String getParentId() {
         return parentId;
-    }
-
-    public void setParentId(String parentId) {
-        this.parentId = parentId;
     }
 
     public String get(String name) {
@@ -85,21 +84,50 @@ public class Commit implements Serializable {
     public void remove(String fileName) {
         this.commitFile.remove(fileName);
     }
+
+    /** put given tracked file in commit to CWD directory */
     public boolean put(String name) {
         File file = join(Repository.CWD, name);
         String blobId = get(name);
         if (Objects.isNull(blobId)) {
             return false;
         }
-        Utils.writeContents(file, Blob.convertBlobToObj(blobId, String.class));
+        Utils.writeContents(file, Blob.content(blobId));
         return true;
     }
 
+    /** put all tracked files in commit to CWD directory */
     public void putAll() {
         Set<String> branchFiles = commitFile.keySet();
         for (String name : branchFiles) {
             put(name);
         }
+    }
+
+    public static Commit acquire(String blobId) {
+        File dict = join(Repository.COMMITS_DIR, blobId.substring(0, 2));
+        if (!dict.exists()) {
+            return null;
+        }
+        File blobFile = join(dict, blobId);
+        if (!blobFile.exists()) {
+            return null;
+        }
+        return Utils.readObject(blobFile, Commit.class);
+    }
+
+    public static String findCommId(String prefix) {
+        File dict = join(Repository.COMMITS_DIR, prefix.substring(0, 2));
+        if (!dict.exists()) {
+            return null;
+        }
+        List<String> blobList = Utils.plainFilenamesIn(dict);
+        for (String blob : blobList) {
+            if (blob.startsWith(prefix)) {
+                return blob;
+            }
+        }
+        return null;
     }
 
 }

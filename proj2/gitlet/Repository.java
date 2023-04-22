@@ -2,13 +2,7 @@ package gitlet;
 
 import java.io.File;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Set;
-import java.util.Date;
-import java.util.Locale;
-import java.util.Collections;
-import java.util.Objects;
+import java.util.*;
 
 import static gitlet.Utils.*;
 
@@ -30,6 +24,9 @@ public class Repository {
 
     /** The objects directory. */
     public static final File OBJECTS_DIR = join(GITLET_DIR, "objects");
+
+    /** The commits directory. */
+    public static final File COMMITS_DIR = join(GITLET_DIR, "commits");
 
     /** The log directory. */
     public static final File LOG_DIR = join(GITLET_DIR, "logs");
@@ -57,6 +54,7 @@ public class Repository {
         }
         GITLET_DIR.mkdir();
         OBJECTS_DIR.mkdir();
+        COMMITS_DIR.mkdir();
         LOG_DIR.mkdir();
         REFS_DIR.mkdir();
         LOCAL.mkdir();
@@ -70,13 +68,12 @@ public class Repository {
         if (!targetFile.exists()) {
             error("File does not exist.");
         }
-        File blobFile = Blob.convertObjToBlob(targetFile);
         HashMap<String, String> stagingArea = Projects.getStagingArea();
         if (Objects.isNull(stagingArea)) {
             stagingArea = new HashMap<>();
         }
         Commit headCommit = Projects.getHeadCommit();
-        String fBlobId = blobFile.getName();
+        String fBlobId = Blob.Blob(targetFile);
         String sBlobId = stagingArea.get(fileName);
         String cBlobId = Objects.isNull(headCommit) ? null : headCommit.get(fileName);
         if (!fBlobId.equals(sBlobId)) {
@@ -84,6 +81,25 @@ public class Repository {
                 stagingArea.remove(fileName);
             } else {
                 stagingArea.put(fileName, fBlobId);
+            }
+        }
+        Projects.updateStagingArea(stagingArea);
+    }
+
+    public static void rm(String fileName) {
+        HashMap<String, String> stagingArea = Projects.getStagingArea();
+        String sBlobId = stagingArea.get(fileName);
+        String cBlobId = Projects.getHeadCommit().get(fileName);
+        if (Objects.isNull(sBlobId) && Objects.isNull(cBlobId)) {
+            error("No reason to remove the file.");
+        }
+        if (!(Objects.isNull(sBlobId) || sBlobId.equals(Projects.STAGED_REMOVAL))) {
+            stagingArea.remove(fileName);
+        } else if (!Objects.isNull(cBlobId)) {
+            stagingArea.put(fileName, Projects.STAGED_REMOVAL);
+            File file = join(CWD, fileName);
+            if (file.exists()) {
+                restrictedDelete(file);
             }
         }
         Projects.updateStagingArea(stagingArea);
@@ -109,12 +125,12 @@ public class Repository {
             }
             Projects.updateStagingArea(stagingArea);
         }
-        File commitBlob = Blob.convertObjToBlob(commit);
-        Projects.updateHeadCommit(commitBlob.getName());
+        String commitId = commit.save();
+        Projects.updateHeadCommit(commitId);
     }
 
     public static void checkout(String branchName) {
-        String currentBranchName = Projects.getBranch();
+        String currentBranchName = Projects.getCurrentBranch();
         if (branchName.equals(currentBranchName)) {
             error("No need to checkout the current branch.");
         }
@@ -122,30 +138,12 @@ public class Repository {
         if (!branch.exists()) {
             error("No such branch exists.");
         }
-        Commit branchCommit =
-                Blob.convertBlobToObj(Utils.readContentsAsString(branch), Commit.class);
-        Set<String> checkoutFiles = branchCommit.getAll();
-        Set<String> currentFiles = Projects.getHeadCommit().getAll();
-        FileScanner scanner = new FileScanner();
-        scanner.scan();
-        List<String> untrackedFiles = scanner.getUntrackedFiles();
-        if (Collections.disjoint(checkoutFiles, untrackedFiles)) {
-            error("There is an untracked file in the way; delete it, or add and commit it first.");
-        }
-        branchCommit.putAll();
-        if (currentFiles.removeAll(checkoutFiles)) {
-            for (String fileName : checkoutFiles) {
-                File file = join(Repository.CWD, fileName);
-                restrictedDelete(file);
-            }
-        }
-        Projects.updateStagingArea(new HashMap<>());
-        Projects.updateHeadCommit(branchCommit.getCommitId());
+        reset(Utils.readContentsAsString(branch));
         Projects.updateBranch(branchName);
     }
     public static void checkout(String commitId, String fileName) {
         Commit commit = Objects.isNull(commitId) ? Projects.getHeadCommit()
-                : Blob.convertBlobToObj(Blob.findBlobId(commitId), Commit.class);
+                : Commit.acquire(Commit.findCommId(commitId));
         if (Objects.isNull(commit)) {
             error("No commit with that id exists.");
         }
@@ -154,37 +152,135 @@ public class Repository {
         }
     }
 
+    public static void reset(String commitId) {
+        Commit targetCommit = Commit.acquire(Commit.findCommId(commitId));
+        if (Objects.isNull(targetCommit)) {
+            error("No commit with that id exists.");
+        }
+        Commit currentCommit = Projects.getHeadCommit();
+        HashMap<String,String> stagingArea = Projects.getStagingArea();
+        Set<String> checkoutFiles = targetCommit.getAll();
+        Set<String> trackedFiles = currentCommit.getAll();
+        trackedFiles.addAll(stagingArea.keySet());
+        for (String fileName : checkoutFiles) {
+            if (Objects.isNull(currentCommit.get(fileName))
+                    && Objects.isNull(stagingArea.get(fileName))) {
+                error("There is an untracked file in the way; delete it, or add and commit it first.");
+            }
+        }
+        targetCommit.putAll();
+        if (trackedFiles.removeAll(checkoutFiles)) {
+            for (String file :trackedFiles) {
+                restrictedDelete(file);
+            }
+        }
+        Projects.updateStagingArea(new HashMap<>());
+        Projects.updateHeadCommit(commitId);
+    }
+
+    public static void status() {
+        StringBuilder status = new StringBuilder();
+        status.append("=== Branches ===");
+        List<String> branchs = plainFilenamesIn(LOCAL);
+        Collections.sort(branchs);
+        for (String branch : branchs) {
+            if (branch.equals(Projects.getCurrentBranch())) {
+                status.append("*");
+            }
+            status.append(branch);
+            status.append(System.getProperty("line.separator"));
+        }
+        status.append(System.getProperty("line.separator"));
+
+        HashMap<String,String> stagingArea = Projects.getStagingArea();
+        Set<String> trackedFiles = stagingArea.keySet();
+        Set<String> stagingFiles = new TreeSet<>();
+        Set<String> removedFiles = new TreeSet<>();
+        for (String fileName : trackedFiles) {
+            if (stagingArea.get(fileName).equals(Projects.STAGED_REMOVAL)) {
+                removedFiles.add(fileName);
+            } else {
+                stagingFiles.add(fileName);
+            }
+        }
+        status.append("=== Staged Files ===");
+        for (String stagingFile : stagingFiles) {
+            status.append(stagingFile);
+            status.append(System.getProperty("line.separator"));
+        }
+        status.append(System.getProperty("line.separator"));
+        status.append("=== Removed Files ===");
+        for (String removedFile : removedFiles) {
+            status.append(removedFile);
+            status.append(System.getProperty("line.separator"));
+        }
+        status.append(System.getProperty("line.separator"));
+
+    }
     public static void branch(String name) {
-        File branchFile = Utils.join(Repository.LOCAL, name);
+        File branchFile = Utils.join(LOCAL, name);
         if (branchFile.exists()) {
-            Repository.error("A branch with that name already exists.");
+            error("A branch with that name already exists.");
         }
         Commit headCommit = Projects.getHeadCommit();
         if (!Objects.isNull(headCommit)) {
             Utils.writeContents(branchFile, headCommit.getCommitId());
         }
     }
+
+    public static void rmBranch(String name) {
+        File branchFile = Utils.join(Repository.LOCAL, name);
+        if (!branchFile.exists()) {
+            error("A branch with that name does not exist.");
+        }
+        String currentBranch = Projects.getCurrentBranch();
+        if (currentBranch.equals(name)) {
+            error("Cannot remove the current branch.");
+        }
+        restrictedDelete(branchFile);
+    }
     public static void log() {
-        File log = join(LOG_DIR, Projects.getBranch());
-        StringBuilder logMessage = new StringBuilder();
+        File log = join(LOG_DIR, Projects.getCurrentBranch());
         Commit commit = Projects.getHeadCommit();
+        StringBuilder logMessage = new StringBuilder();
         while (!Objects.isNull(commit)) {
-            logMessage.append("===");
-            logMessage.append(System.getProperty("line.separator"));
-            logMessage.append("commit " + commit.getCommitId());
-            logMessage.append(System.getProperty("line.separator"));
-            logMessage.append("Date: " + String.format(Locale.ENGLISH,
-                    "%1$ta %1$tb %1$te %1$tH:%1$tM:%1$tS %1$tY %1$tz",
-                    commit.getTimeStamp()));
-            logMessage.append(System.getProperty("line.separator"));
-            logMessage.append(commit.getMessage());
-            logMessage.append(System.getProperty("line.separator"));
-            logMessage.append(System.getProperty("line.separator"));
+            Projects.addMessage(logMessage, commit);
             String parentId = commit.getParentId();
-            commit = Objects.isNull(parentId)
-                    ? null : Blob.convertBlobToObj(parentId, Commit.class);
+            commit = Objects.isNull(parentId) ? null : Commit.acquire(parentId);
         }
         System.out.println(logMessage);
         Utils.writeContents(log, logMessage.toString());
+    }
+
+    public static void globalLog() {
+        List<String> commitDirs = plainFilenamesIn(COMMITS_DIR);
+        StringBuilder logMessage = new StringBuilder();
+        for (String commitDir : commitDirs) {
+            List<String> ids = plainFilenamesIn(commitDir);
+            for (String id : ids) {
+                Commit commit = Commit.acquire(id);
+                Projects.addMessage(logMessage, commit);
+            }
+        }
+        System.out.println(logMessage);
+    }
+
+    public static void find(String commitMessage) {
+        List<String> commitDirs = plainFilenamesIn(COMMITS_DIR);
+        StringBuilder idMessage = new StringBuilder();
+        for (String commitDir : commitDirs) {
+            List<String> ids = plainFilenamesIn(commitDir);
+            for (String id : ids) {
+                Commit commit = Commit.acquire(id);
+                if (commit.getMessage().equals(commitMessage)) {
+                    idMessage.append(id);
+                    idMessage.append(System.getProperty("line.separator"));
+                }
+            }
+        }
+        if (idMessage.isEmpty()) {
+            error("Found no commit with that message.");
+        }
+        System.out.println(idMessage);
     }
 }
