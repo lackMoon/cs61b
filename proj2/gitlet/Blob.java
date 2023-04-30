@@ -1,8 +1,6 @@
 package gitlet;
 
 import java.io.File;
-import java.io.Serializable;
-import java.util.List;
 
 import static gitlet.Utils.*;
 
@@ -12,7 +10,7 @@ import static gitlet.Utils.*;
  */
 class Blob {
 
-    static String Blob(File file) {
+    static String blob(File file) {
         String blobId = sha1(Utils.readContentsAsString(file));
         File dict = join(Repository.OBJECTS_DIR, blobId.substring(0, 2));
         if (!dict.exists()) {

@@ -16,19 +16,23 @@ public class Main {
         String firstArg = args[0];
         switch (firstArg) {
             case "init":
-                validateArgs(args, new int[]{1});
+                validateArgs(args, 1);
                 Repository.init();
                 break;
             case "add":
-                validateArgs(args, new int[]{2});
+                validateArgs(args, 2);
                 Repository.add(args[1]);
                 break;
+            case "rm":
+                validateArgs(args, 2);
+                Repository.rm(args[1]);
+                break;
             case "commit":
-                validateArgs(args, new int[]{2});
+                validateArgs(args, 2);
                 Repository.commit(args[1], new Date());
                 break;
             case "checkout":
-                validateArgs(args, new int[]{2, 3, 4});
+                validateArgs(args, 2, 4);
                 if (args.length == 2) {
                     Repository.checkout(args[1]);
                 } else if (args.length == 4) {
@@ -37,25 +41,46 @@ public class Main {
                     Repository.checkout(null, args[2]);
                 }
                 break;
+            case "branch":
+                validateArgs(args, 2);
+                Repository.branch(args[1]);
+                break;
+            case "rm-branch":
+                validateArgs(args, 2);
+                Repository.rmBranch(args[1]);
+                break;
+            case "reset":
+                validateArgs(args, 2);
+                Repository.reset(args[1]);
+                break;
             case "log":
-                validateArgs(args, new int[]{1});
+                validateArgs(args, 1);
                 Repository.log();
+                break;
+            case "global-log":
+                validateArgs(args, 1);
+                Repository.globalLog();
+                break;
+            case "find":
+                validateArgs(args, 2);
+                Repository.find(args[1]);
+                break;
+            case "status":
+                validateArgs(args, 1);
+                Repository.status();
                 break;
             default:
                 Repository.error("No command with that name exists.");
         }
     }
 
-    public static void validateArgs(String[] args, int[] nums) {
-        boolean isLengthCorrect = false;
+    public static void validateArgs(String[] args, int num) {
+        validateArgs(args, num, num);
+    }
+
+    public static void validateArgs(String[] args, int min, int max) {
         int len = args.length;
-        for (int num : nums) {
-            if (len == num) {
-                isLengthCorrect = true;
-                break;
-            }
-        }
-        if (!isLengthCorrect) {
+        if (len < min || len > max) {
             Repository.error("Incorrect operands.");
         }
         if (!(args[0].equals("init") || Repository.GITLET_DIR.exists())) {

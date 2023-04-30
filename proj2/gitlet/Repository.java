@@ -73,7 +73,7 @@ public class Repository {
             stagingArea = new HashMap<>();
         }
         Commit headCommit = Projects.getHeadCommit();
-        String fBlobId = Blob.Blob(targetFile);
+        String fBlobId = Blob.blob(targetFile);
         String sBlobId = stagingArea.get(fileName);
         String cBlobId = Objects.isNull(headCommit) ? null : headCommit.get(fileName);
         if (!fBlobId.equals(sBlobId)) {
@@ -158,13 +158,12 @@ public class Repository {
             error("No commit with that id exists.");
         }
         Commit currentCommit = Projects.getHeadCommit();
-        HashMap<String,String> stagingArea = Projects.getStagingArea();
+        HashMap<String, String> stagingArea = Projects.getStagingArea();
         Set<String> checkoutFiles = targetCommit.getAll();
         Set<String> trackedFiles = currentCommit.getAll();
         trackedFiles.addAll(stagingArea.keySet());
         for (String fileName : checkoutFiles) {
-            if (Objects.isNull(currentCommit.get(fileName))
-                    && Objects.isNull(stagingArea.get(fileName))) {
+            if (!trackedFiles.contains(fileName) && join(CWD, fileName).exists()) {
                 error("There is an untracked file in the way; delete it, or add and commit it first.");
             }
         }
@@ -179,20 +178,19 @@ public class Repository {
     }
 
     public static void status() {
-        StringBuilder status = new StringBuilder();
-        status.append("=== Branches ===");
+        MessageBuilder statusMessage = new MessageBuilder();
+        statusMessage.appendln("=== Branches ===");
         List<String> branchs = plainFilenamesIn(LOCAL);
         Collections.sort(branchs);
         for (String branch : branchs) {
             if (branch.equals(Projects.getCurrentBranch())) {
-                status.append("*");
+                statusMessage.append("*");
             }
-            status.append(branch);
-            status.append(System.getProperty("line.separator"));
+            statusMessage.appendln(branch);
         }
-        status.append(System.getProperty("line.separator"));
+        statusMessage.append(System.getProperty("line.separator"));
 
-        HashMap<String,String> stagingArea = Projects.getStagingArea();
+        HashMap<String, String> stagingArea = Projects.getStagingArea();
         Set<String> trackedFiles = stagingArea.keySet();
         Set<String> stagingFiles = new TreeSet<>();
         Set<String> removedFiles = new TreeSet<>();
@@ -203,19 +201,17 @@ public class Repository {
                 stagingFiles.add(fileName);
             }
         }
-        status.append("=== Staged Files ===");
+        statusMessage.appendln("=== Staged Files ===");
         for (String stagingFile : stagingFiles) {
-            status.append(stagingFile);
-            status.append(System.getProperty("line.separator"));
+            statusMessage.appendln(stagingFile);
         }
-        status.append(System.getProperty("line.separator"));
-        status.append("=== Removed Files ===");
+        statusMessage.append(System.getProperty("line.separator"));
+        statusMessage.appendln("=== Removed Files ===");
         for (String removedFile : removedFiles) {
-            status.append(removedFile);
-            status.append(System.getProperty("line.separator"));
+            statusMessage.appendln(removedFile);
         }
-        status.append(System.getProperty("line.separator"));
-
+        statusMessage.append(System.getProperty("line.separator"));
+        System.out.println(statusMessage);
     }
     public static void branch(String name) {
         File branchFile = Utils.join(LOCAL, name);
@@ -242,9 +238,15 @@ public class Repository {
     public static void log() {
         File log = join(LOG_DIR, Projects.getCurrentBranch());
         Commit commit = Projects.getHeadCommit();
-        StringBuilder logMessage = new StringBuilder();
+        MessageBuilder logMessage = new MessageBuilder();
         while (!Objects.isNull(commit)) {
-            Projects.addMessage(logMessage, commit);
+            logMessage.appendln("===");
+            logMessage.appendln("commit " + commit.getCommitId());
+            logMessage.appendln("Date: " + String.format(Locale.ENGLISH,
+                    "%1$ta %1$tb %1$te %1$tH:%1$tM:%1$tS %1$tY %1$tz",
+                    commit.getTimeStamp()));
+            logMessage.appendln(commit.getMessage());
+            logMessage.append(System.getProperty("line.separator"));
             String parentId = commit.getParentId();
             commit = Objects.isNull(parentId) ? null : Commit.acquire(parentId);
         }
@@ -254,12 +256,18 @@ public class Repository {
 
     public static void globalLog() {
         List<String> commitDirs = plainFilenamesIn(COMMITS_DIR);
-        StringBuilder logMessage = new StringBuilder();
+        MessageBuilder logMessage = new MessageBuilder();
         for (String commitDir : commitDirs) {
             List<String> ids = plainFilenamesIn(commitDir);
             for (String id : ids) {
                 Commit commit = Commit.acquire(id);
-                Projects.addMessage(logMessage, commit);
+                logMessage.appendln("===");
+                logMessage.appendln("commit " + commit.getCommitId());
+                logMessage.appendln("Date: " + String.format(Locale.ENGLISH,
+                        "%1$ta %1$tb %1$te %1$tH:%1$tM:%1$tS %1$tY %1$tz",
+                        commit.getTimeStamp()));
+                logMessage.appendln(commit.getMessage());
+                logMessage.append(System.getProperty("line.separator"));
             }
         }
         System.out.println(logMessage);
@@ -267,14 +275,13 @@ public class Repository {
 
     public static void find(String commitMessage) {
         List<String> commitDirs = plainFilenamesIn(COMMITS_DIR);
-        StringBuilder idMessage = new StringBuilder();
+        MessageBuilder idMessage = new MessageBuilder();
         for (String commitDir : commitDirs) {
             List<String> ids = plainFilenamesIn(commitDir);
             for (String id : ids) {
                 Commit commit = Commit.acquire(id);
                 if (commit.getMessage().equals(commitMessage)) {
-                    idMessage.append(id);
-                    idMessage.append(System.getProperty("line.separator"));
+                    idMessage.appendln(id);
                 }
             }
         }
