@@ -138,7 +138,7 @@ public class Repository {
         if (!branch.exists()) {
             error("No such branch exists.");
         }
-        reset(Utils.readContentsAsString(branch));
+        switchToCommit(Utils.readContentsAsString(branch));
         Projects.updateBranch(branchName);
     }
     public static void checkout(String commitId, String fileName) {
@@ -152,7 +152,7 @@ public class Repository {
         }
     }
 
-    public static void reset(String commitId) {
+    private static void switchToCommit(String commitId) {
         Commit targetCommit = Commit.acquire(Commit.findCommId(commitId));
         if (Objects.isNull(targetCommit)) {
             error("No commit with that id exists.");
@@ -176,6 +176,9 @@ public class Repository {
         }
         stagingArea.clear();
         Projects.updateStagingArea(stagingArea);
+    }
+    public static void reset(String commitId) {
+        switchToCommit(commitId);
         Projects.updateHeadCommit(commitId);
     }
 
