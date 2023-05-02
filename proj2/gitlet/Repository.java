@@ -169,14 +169,12 @@ public class Repository {
             }
         }
         targetCommit.putAll();
-        if (trackedFiles.removeAll(checkoutFiles)) {
-            for (String file :trackedFiles) {
-                restrictedDelete(file);
-            }
+        trackedFiles.removeAll(checkoutFiles);
+        for (String file :trackedFiles) {
+            restrictedDelete(file);
         }
         stagingArea.clear();
         Projects.updateStagingArea(stagingArea);
-        Projects.updateHeadCommit(commitId);
     }
 
     public static void status() {
@@ -238,7 +236,7 @@ public class Repository {
         if (currentBranch.equals(name)) {
             error("Cannot remove the current branch.");
         }
-        restrictedDelete(branchFile);
+        branchFile.delete();
     }
     public static void log() {
         File log = join(LOG_DIR, Projects.getCurrentBranch());
@@ -260,34 +258,28 @@ public class Repository {
     }
 
     public static void globalLog() {
-        List<String> commitDirs = plainFilenamesIn(COMMITS_DIR);
+        List<String> commitDir = plainFilenamesIn(COMMITS_DIR);
         MessageBuilder logMessage = new MessageBuilder();
-        for (String commitDir : commitDirs) {
-            List<String> ids = plainFilenamesIn(commitDir);
-            for (String id : ids) {
-                Commit commit = Commit.acquire(id);
-                logMessage.appendln("===");
-                logMessage.appendln("commit " + commit.getCommitId());
-                logMessage.appendln("Date: " + String.format(Locale.ENGLISH,
-                        "%1$ta %1$tb %1$te %1$tH:%1$tM:%1$tS %1$tY %1$tz",
-                        commit.getTimeStamp()));
-                logMessage.appendln(commit.getMessage());
-                logMessage.append(System.getProperty("line.separator"));
-            }
+        for (String commitId : commitDir) {
+            Commit commit = Commit.acquire(commitId);
+            logMessage.appendln("===");
+            logMessage.appendln("commit " + commit.getCommitId());
+            logMessage.appendln("Date: " + String.format(Locale.ENGLISH,
+                    "%1$ta %1$tb %1$te %1$tH:%1$tM:%1$tS %1$tY %1$tz",
+                    commit.getTimeStamp()));
+            logMessage.appendln(commit.getMessage());
+            logMessage.append(System.getProperty("line.separator"));
         }
         System.out.println(logMessage);
     }
 
     public static void find(String commitMessage) {
-        List<String> commitDirs = plainFilenamesIn(COMMITS_DIR);
+        List<String> commitDir = plainFilenamesIn(COMMITS_DIR);
         MessageBuilder idMessage = new MessageBuilder();
-        for (String commitDir : commitDirs) {
-            List<String> ids = plainFilenamesIn(commitDir);
-            for (String id : ids) {
-                Commit commit = Commit.acquire(id);
-                if (commit.getMessage().equals(commitMessage)) {
-                    idMessage.appendln(id);
-                }
+        for (String commitId : commitDir) {
+            Commit commit = Commit.acquire(commitId);
+            if (commit.getMessage().equals(commitMessage)) {
+                idMessage.appendln(commitId);
             }
         }
         if (idMessage.isEmpty()) {

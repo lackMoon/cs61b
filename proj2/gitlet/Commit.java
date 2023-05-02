@@ -44,19 +44,6 @@ public class Commit implements Serializable {
         }
     }
 
-    public String save() {
-        String blobId = this.getCommitId();
-        File dict = join(Repository.COMMITS_DIR, blobId.substring(0, 2));
-        if (!dict.exists()) {
-            dict.mkdir();
-        }
-        File blobFile = join(dict, blobId);
-        if (!blobFile.exists()) {
-            Utils.writeObject(blobFile, this);
-        }
-        return blobId;
-    }
-
     public String getMessage() {
         return message;
     }
@@ -104,27 +91,28 @@ public class Commit implements Serializable {
         }
     }
 
-    public static Commit acquire(String blobId) {
-        File dict = join(Repository.COMMITS_DIR, blobId.substring(0, 2));
-        if (!dict.exists()) {
+    public String save() {
+        String commitId = this.getCommitId();
+        File commitFile = join(Repository.COMMITS_DIR, commitId);
+        Utils.writeObject(commitFile, this);
+        return commitId;
+    }
+    public static Commit acquire(String commitId) {
+        if (Objects.isNull(commitId)) {
             return null;
         }
-        File blobFile = join(dict, blobId);
-        if (!blobFile.exists()) {
+        File commitFile = join(Repository.COMMITS_DIR, commitId);
+        if (!commitFile.exists()) {
             return null;
         }
-        return Utils.readObject(blobFile, Commit.class);
+        return Utils.readObject(commitFile, Commit.class);
     }
 
     public static String findCommId(String prefix) {
-        File dict = join(Repository.COMMITS_DIR, prefix.substring(0, 2));
-        if (!dict.exists()) {
-            return null;
-        }
-        List<String> blobList = Utils.plainFilenamesIn(dict);
-        for (String blob : blobList) {
-            if (blob.startsWith(prefix)) {
-                return blob;
+        List<String> commitList = Utils.plainFilenamesIn(Repository.COMMITS_DIR);
+        for (String commitId : commitList) {
+            if (commitId.startsWith(prefix)) {
+                return commitId;
             }
         }
         return null;

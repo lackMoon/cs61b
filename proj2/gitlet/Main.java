@@ -11,7 +11,7 @@ public class Main {
      */
     public static void main(String[] args) {
         if (args.length == 0) {
-            Repository.error("Must have at least one argument");
+            Repository.error("Please enter a command.");
         }
         String firstArg = args[0];
         switch (firstArg) {
