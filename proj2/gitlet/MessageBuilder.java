@@ -15,7 +15,7 @@ public class MessageBuilder {
     }
 
     public boolean isEmpty() {
-        return builder.isEmpty();
+        return builder.length() == 0;
     }
     @Override
     public String toString() {

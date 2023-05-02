@@ -61,6 +61,8 @@ public class Repository {
         branch("master");
         Projects.updateBranch("master");
         commit("initial commit", new Date(0));
+        HashMap<String, String> stagingArea = new HashMap<>();
+        Projects.updateStagingArea(stagingArea);
     }
 
     public static void add(String fileName) {
@@ -69,9 +71,6 @@ public class Repository {
             error("File does not exist.");
         }
         HashMap<String, String> stagingArea = Projects.getStagingArea();
-        if (Objects.isNull(stagingArea)) {
-            stagingArea = new HashMap<>();
-        }
         Commit headCommit = Projects.getHeadCommit();
         String fBlobId = Blob.blob(targetFile);
         String sBlobId = stagingArea.get(fileName);
@@ -116,13 +115,14 @@ public class Repository {
                 error("No changes added to the commit.");
             }
             for (String fileName : stagingArea.keySet()) {
-                String fileBlob = stagingArea.remove(fileName);
+                String fileBlob = stagingArea.get(fileName);
                 if (fileBlob.equals(Projects.STAGED_REMOVAL)) {
                     commit.remove(fileName);
                 } else {
                     commit.add(fileName, fileBlob);
                 }
             }
+            stagingArea.clear();
             Projects.updateStagingArea(stagingArea);
         }
         String commitId = commit.save();
@@ -164,7 +164,8 @@ public class Repository {
         trackedFiles.addAll(stagingArea.keySet());
         for (String fileName : checkoutFiles) {
             if (!trackedFiles.contains(fileName) && join(CWD, fileName).exists()) {
-                error("There is an untracked file in the way; delete it, or add and commit it first.");
+                error("There is an untracked file in the way;" +
+                        " delete it, or add and commit it first.");
             }
         }
         targetCommit.putAll();
@@ -173,7 +174,8 @@ public class Repository {
                 restrictedDelete(file);
             }
         }
-        Projects.updateStagingArea(new HashMap<>());
+        stagingArea.clear();
+        Projects.updateStagingArea(stagingArea);
         Projects.updateHeadCommit(commitId);
     }
 
@@ -211,6 +213,9 @@ public class Repository {
             statusMessage.appendln(removedFile);
         }
         statusMessage.append(System.getProperty("line.separator"));
+        statusMessage.appendln("=== Modifications Not Staged For Commit ===");
+        statusMessage.append(System.getProperty("line.separator"));
+        statusMessage.appendln("=== Untracked Files ===");
         System.out.println(statusMessage);
     }
     public static void branch(String name) {
