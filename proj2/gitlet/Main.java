@@ -83,8 +83,18 @@ public class Main {
         if (len < min || len > max) {
             Repository.error("Incorrect operands.");
         }
+        if (args[0].equals("checkout") && len >= 3) {
+            validateFormat(args);
+        }
         if (!(args[0].equals("init") || Repository.GITLET_DIR.exists())) {
             Repository.error("Not in an initialized Gitlet directory.");
+        }
+    }
+
+    public static void validateFormat(String[] args) {
+        int index = args.length - 2;
+        if (!args[index].equals("--")) {
+            Repository.error("Incorrect operands.");
         }
     }
 }

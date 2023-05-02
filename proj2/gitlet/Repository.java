@@ -159,13 +159,14 @@ public class Repository {
         }
         Commit currentCommit = Projects.getHeadCommit();
         HashMap<String, String> stagingArea = Projects.getStagingArea();
+        Set<String> trackedFiles = new HashSet<>();
         Set<String> checkoutFiles = targetCommit.getAll();
-        Set<String> trackedFiles = currentCommit.getAll();
+        trackedFiles.addAll(currentCommit.getAll());
         trackedFiles.addAll(stagingArea.keySet());
         for (String fileName : checkoutFiles) {
             if (!trackedFiles.contains(fileName) && join(CWD, fileName).exists()) {
-                error("There is an untracked file in the way;" +
-                        " delete it, or add and commit it first.");
+                error("There is an untracked file in the way;"
+                        + " delete it, or add and commit it first.");
             }
         }
         targetCommit.putAll();
@@ -175,6 +176,7 @@ public class Repository {
         }
         stagingArea.clear();
         Projects.updateStagingArea(stagingArea);
+        Projects.updateHeadCommit(commitId);
     }
 
     public static void status() {

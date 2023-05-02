@@ -26,7 +26,7 @@ public class Commit implements Serializable {
     /** The parent commit of this Commit. */
     private String parentId;
 
-    private TreeMap<String, String> commitFile;
+    private TreeMap<String, String> commitFiles;
 
     public String getCommitId() {
         return sha1(serialize(this));
@@ -36,10 +36,10 @@ public class Commit implements Serializable {
         this.timeStamp = timestamp;
         Commit headCommit = Projects.getHeadCommit();
         if (Objects.isNull(headCommit)) {
-            this.commitFile = new TreeMap<>();
+            this.commitFiles = new TreeMap<>();
             this.parentId = null;
         } else {
-            this.commitFile = headCommit.commitFile;
+            this.commitFiles = headCommit.commitFiles;
             this.parentId = sha1(serialize(headCommit));
         }
     }
@@ -57,19 +57,19 @@ public class Commit implements Serializable {
     }
 
     public String get(String name) {
-        return commitFile.get(name);
+        return commitFiles.get(name);
     }
 
     public Set<String> getAll() {
-        return commitFile.keySet();
+        return commitFiles.keySet();
     }
 
     public void add(String fileName, String blobId) {
-        this.commitFile.put(fileName, blobId);
+        this.commitFiles.put(fileName, blobId);
     }
 
     public void remove(String fileName) {
-        this.commitFile.remove(fileName);
+        this.commitFiles.remove(fileName);
     }
 
     /** put given tracked file in commit to CWD directory */
@@ -85,7 +85,7 @@ public class Commit implements Serializable {
 
     /** put all tracked files in commit to CWD directory */
     public void putAll() {
-        Set<String> branchFiles = commitFile.keySet();
+        Set<String> branchFiles = commitFiles.keySet();
         for (String name : branchFiles) {
             put(name);
         }
@@ -93,19 +93,19 @@ public class Commit implements Serializable {
 
     public String save() {
         String commitId = this.getCommitId();
-        File commitFile = join(Repository.COMMITS_DIR, commitId);
-        Utils.writeObject(commitFile, this);
+        File commFile = join(Repository.COMMITS_DIR, commitId);
+        Utils.writeObject(commFile, this);
         return commitId;
     }
     public static Commit acquire(String commitId) {
         if (Objects.isNull(commitId)) {
             return null;
         }
-        File commitFile = join(Repository.COMMITS_DIR, commitId);
-        if (!commitFile.exists()) {
+        File commFile = join(Repository.COMMITS_DIR, commitId);
+        if (!commFile.exists()) {
             return null;
         }
-        return Utils.readObject(commitFile, Commit.class);
+        return Utils.readObject(commFile, Commit.class);
     }
 
     public static String findCommId(String prefix) {
