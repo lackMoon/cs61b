@@ -18,7 +18,9 @@ public class MessageBuilder {
     }
     public void append(String message) {
         builder.append(message);
-        builder.append(System.getProperty("line.separator"));
+        if (!message.equals("")) {
+            builder.append(System.getProperty("line.separator"));
+        }
     }
 
     public void appendPrefix(char symbol) {

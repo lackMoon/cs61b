@@ -102,9 +102,9 @@ class Projects {
         String headContent = Objects.isNull(headCommitId) ? "" : Blob.content(headCommitId);
         String mergeContent = Objects.isNull(mergeCommitId) ? "" : Blob.content(mergeCommitId);
         conflictMessage.append("<<<<<<< HEAD");
-        conflictMessage.appendRaw(headContent);
+        conflictMessage.append(headContent);
         conflictMessage.append("=======");
-        conflictMessage.appendRaw(mergeContent);
+        conflictMessage.append(mergeContent);
         conflictMessage.appendRaw(">>>>>>>");
         File conflictFile = join(Repository.CWD, fileName);
         Utils.writeContents(conflictFile, conflictMessage.toString());
