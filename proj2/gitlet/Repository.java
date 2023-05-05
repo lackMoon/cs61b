@@ -242,7 +242,8 @@ public class Repository {
         branchFile.delete();
     }
 
-    private static boolean mergeFile(Set<String> fileSet, Commit headCommit, Commit mergeCommit, Commit splitCommit) {
+    private static boolean mergeFile(Set<String> fileSet, Commit headCommit,
+                                     Commit mergeCommit, Commit splitCommit) {
         HashMap<String, String> stagingArea = Projects.getStagingArea();
         boolean isConflict = false;
         for (String fileName : fileSet) {

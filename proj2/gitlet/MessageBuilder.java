@@ -11,8 +11,12 @@ public class MessageBuilder {
 
     public void appendSegment(String segment) {
         builder.append(System.getProperty("line.separator"));
-        builder.append(segment);
-        builder.append(System.getProperty("line.separator"));
+        this.append(segment);
+    }
+    public void appendRaw(String message) {
+        if (!Objects.isNull(message)) {
+            builder.append(message);
+        }
     }
     public void append(String message) {
         if (!Objects.isNull(message)) {

@@ -105,7 +105,7 @@ class Projects {
         conflictMessage.append(headContent);
         conflictMessage.append("=======");
         conflictMessage.append(mergeContent);
-        conflictMessage.append(">>>>>>>");
+        conflictMessage.appendRaw(">>>>>>>");
         File conflictFile = join(Repository.CWD, fileName);
         Utils.writeContents(conflictFile, conflictMessage.toString());
         return Blob.blob(conflictFile);
