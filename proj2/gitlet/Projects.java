@@ -99,12 +99,12 @@ class Projects {
 
     static String makeConflictFile(String fileName, String headCommitId, String mergeCommitId) {
         MessageBuilder conflictMessage = new MessageBuilder();
-        String headContent = Objects.isNull(headCommitId) ? null : Blob.content(headCommitId);
-        String mergeContent = Objects.isNull(mergeCommitId) ? null : Blob.content(mergeCommitId);
+        String headContent = Objects.isNull(headCommitId) ? "" : Blob.content(headCommitId);
+        String mergeContent = Objects.isNull(mergeCommitId) ? "" : Blob.content(mergeCommitId);
         conflictMessage.append("<<<<<<< HEAD");
-        conflictMessage.append(headContent);
+        conflictMessage.appendRaw(headContent);
         conflictMessage.append("=======");
-        conflictMessage.append(mergeContent);
+        conflictMessage.appendRaw(mergeContent);
         conflictMessage.appendRaw(">>>>>>>");
         File conflictFile = join(Repository.CWD, fileName);
         Utils.writeContents(conflictFile, conflictMessage.toString());

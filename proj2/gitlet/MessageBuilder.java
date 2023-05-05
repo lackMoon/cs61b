@@ -14,15 +14,11 @@ public class MessageBuilder {
         this.append(segment);
     }
     public void appendRaw(String message) {
-        if (!Objects.isNull(message)) {
-            builder.append(message);
-        }
+        builder.append(message);
     }
     public void append(String message) {
-        if (!Objects.isNull(message)) {
-            builder.append(message);
-            builder.append(System.getProperty("line.separator"));
-        }
+        builder.append(message);
+        builder.append(System.getProperty("line.separator"));
     }
 
     public void appendPrefix(char symbol) {
