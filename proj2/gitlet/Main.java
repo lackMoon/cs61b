@@ -29,7 +29,7 @@ public class Main {
                 break;
             case "commit":
                 validateArgs(args, 2);
-                Repository.commit(args[1], new Date());
+                Repository.commit(args[1], new Date(), null);
                 break;
             case "checkout":
                 validateArgs(args, 2, 4);
@@ -52,6 +52,10 @@ public class Main {
             case "reset":
                 validateArgs(args, 2);
                 Repository.reset(args[1]);
+                break;
+            case "merge":
+                validateArgs(args, 2);
+                Repository.merge(args[1]);
                 break;
             case "log":
                 validateArgs(args, 1);

@@ -3,7 +3,6 @@ package gitlet;
 import java.io.File;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Objects;
 
 import static gitlet.Utils.join;
@@ -98,17 +97,18 @@ class Projects {
         cachedArray[STAGING_INDEX] = false;
     }
 
-    static void addMessage(StringBuilder logMessage, Commit commit) {
-        logMessage.append("===");
-        logMessage.append(System.getProperty("line.separator"));
-        logMessage.append("commit " + commit.getCommitId());
-        logMessage.append(System.getProperty("line.separator"));
-        logMessage.append("Date: " + String.format(Locale.ENGLISH,
-                "%1$ta %1$tb %1$te %1$tH:%1$tM:%1$tS %1$tY %1$tz",
-                commit.getTimeStamp()));
-        logMessage.append(System.getProperty("line.separator"));
-        logMessage.append(commit.getMessage());
-        logMessage.append(System.getProperty("line.separator"));
-        logMessage.append(System.getProperty("line.separator"));
+    static String makeConflictFile(String fileName, String headCommitId, String mergeCommitId) {
+        MessageBuilder conflictMessage = new MessageBuilder();
+        String headContent = Objects.isNull(headCommitId) ? null : Blob.content(headCommitId);
+        String mergeContent = Objects.isNull(mergeCommitId) ? null : Blob.content(mergeCommitId);
+        conflictMessage.append("<<<<<<< HEAD");
+        conflictMessage.append(headContent);
+        conflictMessage.append("=======");
+        conflictMessage.append(mergeContent);
+        conflictMessage.append(">>>>>>>");
+        File conflictFile = join(Repository.CWD, fileName);
+        Utils.writeContents(conflictFile, conflictMessage.toString());
+        return Blob.blob(conflictFile);
     }
+
 }

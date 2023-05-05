@@ -60,7 +60,7 @@ public class Repository {
         LOCAL.mkdir();
         branch("master");
         Projects.updateBranch("master");
-        commit("initial commit", new Date(0));
+        commit("initial commit", new Date(0), null);
         HashMap<String, String> stagingArea = new HashMap<>();
         Projects.updateStagingArea(stagingArea);
     }
@@ -104,7 +104,7 @@ public class Repository {
         Projects.updateStagingArea(stagingArea);
     }
 
-    public static void commit(String message, Date timestamp) {
+    public static void commit(String message, Date timestamp, String mergedParentId) {
         if (message.isBlank()) {
             error("Please enter a commit message.");
         }
@@ -124,6 +124,9 @@ public class Repository {
             }
             stagingArea.clear();
             Projects.updateStagingArea(stagingArea);
+        }
+        if (!Objects.isNull(mergedParentId)) {
+            commit.setMergedParentId(mergedParentId);
         }
         String commitId = commit.save();
         Projects.updateHeadCommit(commitId);
@@ -184,17 +187,15 @@ public class Repository {
 
     public static void status() {
         MessageBuilder statusMessage = new MessageBuilder();
-        statusMessage.appendln("=== Branches ===");
+        statusMessage.append("=== Branches ===");
         List<String> branchs = plainFilenamesIn(LOCAL);
         Collections.sort(branchs);
         for (String branch : branchs) {
             if (branch.equals(Projects.getCurrentBranch())) {
-                statusMessage.append("*");
+                statusMessage.appendPrefix('*');
             }
-            statusMessage.appendln(branch);
+            statusMessage.append(branch);
         }
-        statusMessage.append(System.getProperty("line.separator"));
-
         HashMap<String, String> stagingArea = Projects.getStagingArea();
         Set<String> trackedFiles = stagingArea.keySet();
         Set<String> stagingFiles = new TreeSet<>();
@@ -206,19 +207,16 @@ public class Repository {
                 stagingFiles.add(fileName);
             }
         }
-        statusMessage.appendln("=== Staged Files ===");
+        statusMessage.appendSegment("=== Staged Files ===");
         for (String stagingFile : stagingFiles) {
-            statusMessage.appendln(stagingFile);
+            statusMessage.append(stagingFile);
         }
-        statusMessage.append(System.getProperty("line.separator"));
-        statusMessage.appendln("=== Removed Files ===");
+        statusMessage.appendSegment("=== Removed Files ===");
         for (String removedFile : removedFiles) {
-            statusMessage.appendln(removedFile);
+            statusMessage.append(removedFile);
         }
-        statusMessage.append(System.getProperty("line.separator"));
-        statusMessage.appendln("=== Modifications Not Staged For Commit ===");
-        statusMessage.append(System.getProperty("line.separator"));
-        statusMessage.appendln("=== Untracked Files ===");
+        statusMessage.appendSegment("=== Modifications Not Staged For Commit ===");
+        statusMessage.appendSegment("=== Untracked Files ===");
         System.out.println(statusMessage);
     }
     public static void branch(String name) {
@@ -243,18 +241,110 @@ public class Repository {
         }
         branchFile.delete();
     }
+
+    private static boolean mergeFile(Set<String> fileSet, Commit headCommit, Commit mergeCommit, Commit splitCommit) {
+        HashMap<String, String> stagingArea = Projects.getStagingArea();
+        boolean isConflict = false;
+        for (String fileName : fileSet) {
+            String cBlobId = headCommit.get(fileName);
+            String mBlobId = mergeCommit.get(fileName);
+            String sBlobId = splitCommit.get(fileName);
+            if (Objects.isNull(sBlobId)) {
+                if (Objects.isNull(cBlobId) && !Objects.isNull(mBlobId)) {
+                    //not in split nor head but in merged branch
+                    stagingArea.put(fileName, mBlobId);
+                }
+            } else {
+                if (Objects.isNull(cBlobId)) {
+                    if (!(Objects.isNull(mBlobId) || sBlobId.equals(mBlobId))) {
+                        //present in split but not in head and modified in merged branch
+                        isConflict = true;
+                        Projects.makeConflictFile(fileName, null, mBlobId);
+                        add(fileName);
+                    }
+                } else {
+                    if (Objects.isNull(mBlobId)) {
+                        if (sBlobId.equals(cBlobId)) {
+                            //present in split and unmodified in head but not in merged branch
+                            rm(fileName);
+                        } else {
+                            //present in split but not in merged branch and modified in head
+                            isConflict = true;
+                            Projects.makeConflictFile(fileName, cBlobId, null);
+                            add(fileName);
+                        }
+                    } else {
+                        if (sBlobId.equals(cBlobId) && !sBlobId.equals(mBlobId)) {
+                            //present in all,unmodified in head but modified in merged branch
+                            stagingArea.put(fileName, mBlobId);
+                        } else if (!(sBlobId.equals(cBlobId) || sBlobId.equals(mBlobId))) {
+                            //present in all,modified in head and merged branch
+                            isConflict = true;
+                            Projects.makeConflictFile(fileName, cBlobId, mBlobId);
+                            add(fileName);
+                        }
+                    }
+                }
+            }
+        }
+        return isConflict;
+    }
+    public static void merge(String name) {
+        HashMap<String, String> stagingArea = Projects.getStagingArea();
+        String currentBranch = Projects.getCurrentBranch();
+        if (!stagingArea.isEmpty()) {
+            error("You have uncommitted changes.");
+        }
+        if (currentBranch.equals(name)) {
+            error("Cannot merge a branch with itself.");
+        }
+        File branchFile = Utils.join(LOCAL, name);
+        if (!branchFile.exists()) {
+            error("A branch with that name does not exist.");
+        }
+        String mergeId = Utils.readContentsAsString(branchFile);
+        Commit headCommit = Projects.getHeadCommit();
+        Commit mergeCommit = Commit.acquire(mergeId);
+        String splitPoint = headCommit.findSplitPoint(mergeCommit);
+        Commit splitCommit = Commit.acquire(splitPoint);
+        if (splitPoint.equals(mergeCommit.getCommitId())) {
+            error("Given branch is an ancestor of the current branch.");
+        } else if (splitPoint.equals(headCommit.getCommitId())) {
+            switchToCommit(mergeId);
+            Projects.updateBranch(name);
+            error("Current branch fast-forwarded.");
+        }
+        Set<String> untrackedSet = new HashSet<>();
+        Set<String> fileSet = new HashSet<>();
+        Set<String> headSet = headCommit.getAll();
+        Set<String> mergeSet = mergeCommit.getAll();
+        Set<String> splitSet = splitCommit.getAll();
+        fileSet.addAll(headSet);
+        fileSet.addAll(mergeSet);
+        fileSet.addAll(splitSet);
+        untrackedSet.addAll(plainFilenamesIn(CWD));
+        untrackedSet.removeAll(headSet);
+        if (!untrackedSet.isEmpty()) {
+            for (String untrackedFile : untrackedSet) {
+                if (mergeSet.contains(untrackedFile)) {
+                    error("There is an untracked file in the way;"
+                            + " delete it, or add and commit it first.");
+                }
+            }
+        }
+        boolean isConflict = mergeFile(fileSet, headCommit, mergeCommit, splitCommit);
+        commit("Merged " + name + " into " + currentBranch + ".", new Date(), mergeId);
+        Projects.getHeadCommit().putAll();
+        if (isConflict) {
+            System.out.println("Encountered a merge conflict.");
+        }
+    }
     public static void log() {
         File log = join(LOG_DIR, Projects.getCurrentBranch());
         Commit commit = Projects.getHeadCommit();
         MessageBuilder logMessage = new MessageBuilder();
         while (!Objects.isNull(commit)) {
-            logMessage.appendln("===");
-            logMessage.appendln("commit " + commit.getCommitId());
-            logMessage.appendln("Date: " + String.format(Locale.ENGLISH,
-                    "%1$ta %1$tb %1$te %1$tH:%1$tM:%1$tS %1$tY %1$tz",
-                    commit.getTimeStamp()));
-            logMessage.appendln(commit.getMessage());
-            logMessage.append(System.getProperty("line.separator"));
+            logMessage.appendCommitMessage(commit);
             String parentId = commit.getParentId();
             commit = Objects.isNull(parentId) ? null : Commit.acquire(parentId);
         }
@@ -267,13 +357,7 @@ public class Repository {
         MessageBuilder logMessage = new MessageBuilder();
         for (String commitId : commitDir) {
             Commit commit = Commit.acquire(commitId);
-            logMessage.appendln("===");
-            logMessage.appendln("commit " + commit.getCommitId());
-            logMessage.appendln("Date: " + String.format(Locale.ENGLISH,
-                    "%1$ta %1$tb %1$te %1$tH:%1$tM:%1$tS %1$tY %1$tz",
-                    commit.getTimeStamp()));
-            logMessage.appendln(commit.getMessage());
-            logMessage.append(System.getProperty("line.separator"));
+            logMessage.appendCommitMessage(commit);
         }
         System.out.println(logMessage);
     }
@@ -284,7 +368,7 @@ public class Repository {
         for (String commitId : commitDir) {
             Commit commit = Commit.acquire(commitId);
             if (commit.getMessage().equals(commitMessage)) {
-                idMessage.appendln(commitId);
+                idMessage.append(commitId);
             }
         }
         if (idMessage.isEmpty()) {

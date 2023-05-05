@@ -26,6 +26,10 @@ public class Commit implements Serializable {
     /** The parent commit of this Commit. */
     private String parentId;
 
+
+    /** The merged parent commit of this Commit. */
+    private String mergedParentId;
+
     private TreeMap<String, String> commitFiles;
 
     public String getCommitId() {
@@ -54,6 +58,13 @@ public class Commit implements Serializable {
 
     public String getParentId() {
         return parentId;
+    }
+
+    public String getMergedParentId() {
+        return mergedParentId;
+    }
+    public void setMergedParentId(String mergedParentId) {
+        this.mergedParentId = mergedParentId;
     }
 
     public String get(String name) {
@@ -97,6 +108,31 @@ public class Commit implements Serializable {
         Utils.writeObject(commFile, this);
         return commitId;
     }
+
+    public String findSplitPoint(Commit commit) {
+        Queue<Commit> queue = new ArrayDeque<>();
+        Set<String> markedSet = new HashSet<>();
+        queue.add(this);
+        queue.add(commit);
+        while (!queue.isEmpty()) {
+            Commit currentCommit = queue.poll();
+            if (!Objects.isNull(currentCommit)) {
+                String currentId = currentCommit.getCommitId();
+                if (markedSet.contains(currentId)) {
+                    return currentId;
+                } else {
+                    markedSet.add(currentId);
+                }
+                if (!Objects.isNull(currentCommit.parentId)) {
+                    queue.add(Commit.acquire(currentCommit.parentId));
+                }
+                if (!Objects.isNull(currentCommit.mergedParentId)) {
+                    queue.add(Commit.acquire(currentCommit.mergedParentId));
+                }
+            }
+        }
+        return null;
+    }
     public static Commit acquire(String commitId) {
         if (Objects.isNull(commitId)) {
             return null;
@@ -110,9 +146,11 @@ public class Commit implements Serializable {
 
     public static String findCommId(String prefix) {
         List<String> commitList = Utils.plainFilenamesIn(Repository.COMMITS_DIR);
-        for (String commitId : commitList) {
-            if (commitId.startsWith(prefix)) {
-                return commitId;
+        if (!Objects.isNull(commitList)) {
+            for (String commitId : commitList) {
+                if (commitId.startsWith(prefix)) {
+                    return commitId;
+                }
             }
         }
         return null;
