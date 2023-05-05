@@ -244,7 +244,6 @@ public class Repository {
 
     private static boolean mergeFile(Set<String> fileSet, Commit headCommit,
                                      Commit mergeCommit, Commit splitCommit) {
-        HashMap<String, String> stagingArea = Projects.getStagingArea();
         boolean isConflict = false;
         for (String fileName : fileSet) {
             String cBlobId = headCommit.get(fileName);
@@ -253,7 +252,8 @@ public class Repository {
             if (Objects.isNull(sBlobId)) {
                 if (Objects.isNull(cBlobId) && !Objects.isNull(mBlobId)) {
                     //not in split nor head but in merged branch
-                    stagingArea.put(fileName, mBlobId);
+                    Utils.writeContents(join(CWD, fileName), Blob.content(mBlobId));
+                    add(fileName);
                 }
             } else {
                 if (Objects.isNull(cBlobId)) {
@@ -277,7 +277,8 @@ public class Repository {
                     } else {
                         if (sBlobId.equals(cBlobId) && !sBlobId.equals(mBlobId)) {
                             //present in all,unmodified in head but modified in merged branch
-                            stagingArea.put(fileName, mBlobId);
+                            Utils.writeContents(join(CWD, fileName), Blob.content(mBlobId));
+                            add(fileName);
                         } else if (!(sBlobId.equals(cBlobId) || sBlobId.equals(mBlobId))) {
                             //present in all,modified in head and merged branch
                             isConflict = true;
