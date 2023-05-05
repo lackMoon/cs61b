@@ -65,6 +65,11 @@ public class Repository {
         Projects.updateStagingArea(stagingArea);
     }
 
+    private static void add(String fileName, String blobId) {
+        File file = join(CWD, fileName);
+        writeContents(file, Blob.content(blobId));
+        add(fileName);
+    }
     public static void add(String fileName) {
         File targetFile = join(CWD, fileName);
         if (!targetFile.exists()) {
@@ -197,14 +202,30 @@ public class Repository {
             statusMessage.append(branch);
         }
         HashMap<String, String> stagingArea = Projects.getStagingArea();
-        Set<String> trackedFiles = stagingArea.keySet();
+        Set<String> trackedFiles = new TreeSet<>();
+        Set<String> untrackedFiles = new TreeSet<>();
+        trackedFiles.addAll(stagingArea.keySet());
+        trackedFiles.addAll(Projects.getHeadCommit().getAll());
+        untrackedFiles.addAll(plainFilenamesIn(CWD));
+        untrackedFiles.removeAll(trackedFiles);
         Set<String> stagingFiles = new TreeSet<>();
         Set<String> removedFiles = new TreeSet<>();
+        Set<String> modifiedFiles = new TreeSet<>();
         for (String fileName : trackedFiles) {
-            if (stagingArea.get(fileName).equals(Projects.STAGED_REMOVAL)) {
-                removedFiles.add(fileName);
+            String sBlobId = stagingArea.get(fileName);
+            File trackedFile = join(CWD, fileName);
+            if (Objects.isNull(sBlobId)) {
+                if (!trackedFile.exists()) {
+                    modifiedFiles.add(fileName);    //not staged but tracked in head commit
+                }
             } else {
-                stagingFiles.add(fileName);
+                if (sBlobId.equals(Projects.STAGED_REMOVAL)) {
+                    removedFiles.add(fileName);     //staged in removal
+                } else if (!(trackedFile.exists() && Blob.blob(trackedFile).equals(sBlobId))) {
+                    modifiedFiles.add(fileName);    //staged in addition but modified from working directory.
+                } else {
+                    stagingFiles.add(fileName);     //staged in addition
+                }
             }
         }
         statusMessage.appendSegment("=== Staged Files ===");
@@ -216,7 +237,13 @@ public class Repository {
             statusMessage.append(removedFile);
         }
         statusMessage.appendSegment("=== Modifications Not Staged For Commit ===");
+        for (String modifiedFile : modifiedFiles) {
+            statusMessage.append(modifiedFile);
+        }
         statusMessage.appendSegment("=== Untracked Files ===");
+        for (String untrackedFile : untrackedFiles) {
+            statusMessage.append(untrackedFile);
+        }
         System.out.println(statusMessage);
     }
     public static void branch(String name) {
@@ -252,16 +279,14 @@ public class Repository {
             if (Objects.isNull(sBlobId)) {
                 if (Objects.isNull(cBlobId) && !Objects.isNull(mBlobId)) {
                     //not in split nor head but in merged branch
-                    Utils.writeContents(join(CWD, fileName), Blob.content(mBlobId));
-                    add(fileName);
+                    add(fileName, mBlobId);
                 }
             } else {
                 if (Objects.isNull(cBlobId)) {
                     if (!(Objects.isNull(mBlobId) || sBlobId.equals(mBlobId))) {
                         //present in split but not in head and modified in merged branch
                         isConflict = true;
-                        Projects.makeConflictFile(fileName, null, mBlobId);
-                        add(fileName);
+                        add(fileName, Projects.makeConflictMessage(fileName, null, mBlobId));
                     }
                 } else {
                     if (Objects.isNull(mBlobId)) {
@@ -271,19 +296,16 @@ public class Repository {
                         } else {
                             //present in split but not in merged branch and modified in head
                             isConflict = true;
-                            Projects.makeConflictFile(fileName, cBlobId, null);
-                            add(fileName);
+                            add(fileName, Projects.makeConflictMessage(fileName, cBlobId, null));
                         }
                     } else {
                         if (sBlobId.equals(cBlobId) && !sBlobId.equals(mBlobId)) {
                             //present in all,unmodified in head but modified in merged branch
-                            Utils.writeContents(join(CWD, fileName), Blob.content(mBlobId));
-                            add(fileName);
+                            add(fileName, mBlobId);
                         } else if (!(sBlobId.equals(cBlobId) || sBlobId.equals(mBlobId))) {
                             //present in all,modified in head and merged branch
                             isConflict = true;
-                            Projects.makeConflictFile(fileName, cBlobId, mBlobId);
-                            add(fileName);
+                            add(fileName, Projects.makeConflictMessage(fileName, cBlobId, mBlobId));
                         }
                     }
                 }
@@ -346,7 +368,7 @@ public class Repository {
         Commit commit = Projects.getHeadCommit();
         MessageBuilder logMessage = new MessageBuilder();
         while (!Objects.isNull(commit)) {
-            logMessage.appendCommitMessage(commit);
+            Projects.makeCommitMessage(logMessage, commit);
             String parentId = commit.getParentId();
             commit = Objects.isNull(parentId) ? null : Commit.acquire(parentId);
         }
@@ -359,7 +381,7 @@ public class Repository {
         MessageBuilder logMessage = new MessageBuilder();
         for (String commitId : commitDir) {
             Commit commit = Commit.acquire(commitId);
-            logMessage.appendCommitMessage(commit);
+            Projects.makeCommitMessage(logMessage, commit);
         }
         System.out.println(logMessage);
     }

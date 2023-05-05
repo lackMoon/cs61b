@@ -10,15 +10,21 @@ import static gitlet.Utils.*;
  */
 class Blob {
 
+
     static String blob(File file) {
-        String blobId = sha1(Utils.readContentsAsString(file));
+        String content = Utils.readContentsAsString(file);
+        return blob(content);
+    }
+
+    static String blob(String content) {
+        String blobId = sha1(content);
         File dict = join(Repository.OBJECTS_DIR, blobId.substring(0, 2));
         if (!dict.exists()) {
             dict.mkdir();
         }
         File blobFile = join(dict, blobId);
         if (!blobFile.exists()) {
-            Utils.writeContents(blobFile, Utils.readContents(file));
+            Utils.writeContents(blobFile, content);
         }
         return blobId;
     }

@@ -3,9 +3,10 @@ package gitlet;
 import java.io.File;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Objects;
 
-import static gitlet.Utils.join;
+import static gitlet.Utils.*;
 
 class Projects {
 
@@ -97,18 +98,44 @@ class Projects {
         cachedArray[STAGING_INDEX] = false;
     }
 
-    static String makeConflictFile(String fileName, String headCommitId, String mergeCommitId) {
-        MessageBuilder conflictMessage = new MessageBuilder();
+//    static String makeConflictMessage(String fileName, String headCommitId, String mergeCommitId) {
+//        MessageBuilder conflictMessage = new MessageBuilder();
+//        String headContent = Objects.isNull(headCommitId) ? "" : Blob.content(headCommitId);
+//        String mergeContent = Objects.isNull(mergeCommitId) ? "" : Blob.content(mergeCommitId);
+//        conflictMessage.append("<<<<<<< HEAD");
+//        conflictMessage.append(headContent);
+//        conflictMessage.append("=======");
+//        conflictMessage.append(mergeContent);
+//        conflictMessage.appendRaw(">>>>>>>");
+//        return Blob.blob(conflictMessage.toString());
+//    }
+
+    static String makeConflictMessage(String fileName, String headCommitId, String mergeCommitId) {
+        StringBuilder conflictMessage = new StringBuilder();
         String headContent = Objects.isNull(headCommitId) ? "" : Blob.content(headCommitId);
         String mergeContent = Objects.isNull(mergeCommitId) ? "" : Blob.content(mergeCommitId);
-        conflictMessage.append("<<<<<<< HEAD");
-        conflictMessage.append(headContent);
-        conflictMessage.append("=======");
-        conflictMessage.append(mergeContent);
-        conflictMessage.appendRaw(">>>>>>>");
-        File conflictFile = join(Repository.CWD, fileName);
-        Utils.writeContents(conflictFile, conflictMessage.toString());
-        return Blob.blob(conflictFile);
+        conflictMessage.append("<<<<<<< HEAD\n");
+        conflictMessage.append(headContent + "\n");
+        conflictMessage.append("=======\n");
+        conflictMessage.append(mergeContent + "\n");
+        conflictMessage.append(">>>>>>>");
+        return Blob.blob(conflictMessage.toString());
+    }
+
+    public static void makeCommitMessage(MessageBuilder builder, Commit commit) {
+        String commId = commit.getCommitId();
+        String mergedId = commit.getMergedParentId();
+        builder.append("===");
+        builder.append("commit " + commId);
+        if (!Objects.isNull(mergedId)) {
+            builder.append("Merge: " + commId.substring(0, 7)
+                    + " " + mergedId.substring(0, 7));
+        }
+        builder.append("Date: " + String.format(Locale.ENGLISH,
+                "%1$ta %1$tb %1$te %1$tH:%1$tM:%1$tS %1$tY %1$tz",
+                commit.getTimeStamp()));
+        builder.append(commit.getMessage());
+        builder.appendRaw(System.getProperty("line.separator"));
     }
 
 }
