@@ -224,13 +224,13 @@ public class Repository {
                 }
             } else {
                 if (sBlobId.equals(Projects.STAGED_REMOVAL)) {
-                    removedFiles.add(fileName);     //staged in removal
+                    removedFiles.add(fileName);
                 } else if (!trackedFile.exists()) {
                     modifiedFiles.put(fileName, false);
-                } else if (!sha1(Utils.readContents(trackedFile)).equals(headCommit.get(fileName))) {
+                } else if (!sha1(Utils.readContents(trackedFile)).equals(sBlobId)) {
                     modifiedFiles.put(fileName, true);
                 } else {
-                    stagingFiles.add(fileName);     //staged in addition
+                    stagingFiles.add(fileName);
                 }
             }
         }
