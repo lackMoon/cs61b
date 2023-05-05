@@ -98,27 +98,15 @@ class Projects {
         cachedArray[STAGING_INDEX] = false;
     }
 
-//    static String makeConflictMessage(String fileName, String headCommitId, String mergeCommitId) {
-//        MessageBuilder conflictMessage = new MessageBuilder();
-//        String headContent = Objects.isNull(headCommitId) ? "" : Blob.content(headCommitId);
-//        String mergeContent = Objects.isNull(mergeCommitId) ? "" : Blob.content(mergeCommitId);
-//        conflictMessage.append("<<<<<<< HEAD");
-//        conflictMessage.append(headContent);
-//        conflictMessage.append("=======");
-//        conflictMessage.append(mergeContent);
-//        conflictMessage.appendRaw(">>>>>>>");
-//        return Blob.blob(conflictMessage.toString());
-//    }
-
-    static String makeConflictMessage(String fileName, String headCommitId, String mergeCommitId) {
-        StringBuilder conflictMessage = new StringBuilder();
+    static String makeConflictMessage(String headCommitId, String mergeCommitId) {
+        MessageBuilder conflictMessage = new MessageBuilder();
         String headContent = Objects.isNull(headCommitId) ? "" : Blob.content(headCommitId);
         String mergeContent = Objects.isNull(mergeCommitId) ? "" : Blob.content(mergeCommitId);
-        conflictMessage.append("<<<<<<< HEAD\n");
-        conflictMessage.append(headContent + "\n");
-        conflictMessage.append("=======\n");
-        conflictMessage.append(mergeContent + "\n");
-        conflictMessage.append(">>>>>>>");
+        conflictMessage.append("<<<<<<< HEAD");
+        conflictMessage.append(headContent);
+        conflictMessage.append("=======");
+        conflictMessage.append(mergeContent);
+        conflictMessage.appendRaw(">>>>>>>");
         return Blob.blob(conflictMessage.toString());
     }
 

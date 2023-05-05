@@ -27,6 +27,10 @@ public class MessageBuilder {
         builder.append(symbol);
     }
 
+    public void appendSuffix(String suffix) {
+        this.append(" (" + suffix + ")");
+    }
+
     public boolean isEmpty() {
         return builder.length() == 0;
     }
