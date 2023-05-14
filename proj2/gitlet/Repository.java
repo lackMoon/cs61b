@@ -29,9 +29,6 @@ public class Repository {
     /** The commits directory. */
     static File COMMITS_DIR;
 
-    /** The log directory. */
-    static File LOG_DIR;
-
     /** The refs directory. */
     static File REFS_DIR;
 
@@ -58,7 +55,6 @@ public class Repository {
     public static void changeRepository(File gitRepository) {
         OBJECTS_DIR = join(gitRepository, "objects");
         COMMITS_DIR = join(gitRepository, "commits");
-        LOG_DIR = join(gitRepository, "logs");
         REFS_DIR = join(gitRepository, "refs");
         LOCAL = join(REFS_DIR, "local");
         REMOTES = join(REFS_DIR, "remotes");
@@ -74,7 +70,6 @@ public class Repository {
         GITLET_DIR.mkdir();
         OBJECTS_DIR.mkdir();
         COMMITS_DIR.mkdir();
-        LOG_DIR.mkdir();
         REFS_DIR.mkdir();
         LOCAL.mkdir();
         REMOTES.mkdir();
@@ -383,7 +378,6 @@ public class Repository {
         }
     }
     public static void log() {
-        File log = join(LOG_DIR, getCurrentBranch());
         Commit commit = getHeadCommit();
         MessageBuilder logMessage = new MessageBuilder();
         while (!Objects.isNull(commit)) {
@@ -392,7 +386,6 @@ public class Repository {
             commit = Objects.isNull(parentId) ? null : Commit.acquire(parentId);
         }
         System.out.print(logMessage);
-        Utils.writeContents(log, logMessage.toString());
     }
 
     public static void globalLog() {
