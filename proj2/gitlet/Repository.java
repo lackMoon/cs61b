@@ -24,31 +24,31 @@ public class Repository {
     public static final File GITLET_DIR = join(CWD, ".gitlet");
 
     /** The objects directory. */
-    public static File OBJECTS_DIR;
+    static File OBJECTS_DIR;
 
     /** The commits directory. */
-    public static File COMMITS_DIR;
+    static File COMMITS_DIR;
 
     /** The log directory. */
-    public static File LOG_DIR;
+    static File LOG_DIR;
 
     /** The refs directory. */
-    public static File REFS_DIR;
+    static File REFS_DIR;
 
     /** The local branch directory. */
-    public static File LOCAL;
+    static File LOCAL;
 
     /** The remote branch directory. */
-    public static File REMOTES;
+    static File REMOTES;
 
     /** The index file which stores content of staging files. */
-    public static File INDEX;
+    static File INDEX;
 
     /** The remote file which stores address of remote repositories. */
-    public static File REMOTE;
+    static File REMOTE;
 
     /** The head file which indicate current branch of repo. */
-    public static File HEAD;
+    static File HEAD;
 
     public static void error(String message) {
         System.out.println(message);
@@ -421,7 +421,7 @@ public class Repository {
     }
 
     public static void addRemote(String name, String address) {
-        HashMap<String,String> remote = getRemoteInformation();
+        HashMap<String, String> remote = getRemoteInformation();
         if (remote.containsKey(name)) {
             error("A remote with that name already exists.");
         }
@@ -435,7 +435,7 @@ public class Repository {
     }
 
     public static void rmRemote(String name) {
-        HashMap<String,String> remote = getRemoteInformation();
+        HashMap<String, String> remote = getRemoteInformation();
         if (!remote.containsKey(name)) {
             error("A remote with that name does not exist.");
         }
@@ -444,7 +444,7 @@ public class Repository {
     }
 
     public static void fetch(String name, String branchName) {
-        HashMap<String,String> remote = getRemoteInformation();
+        HashMap<String, String> remote = getRemoteInformation();
         File repository = join(CWD, remote.get(name));
         if (!repository.exists()) {
             error("Remote directory not found.");
