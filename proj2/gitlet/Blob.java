@@ -18,6 +18,10 @@ class Blob {
 
     static String blob(String content) {
         String blobId = sha1(content);
+        return blob(blobId, content);
+    }
+
+    static String blob(String blobId, String content) {
         File dict = join(Repository.OBJECTS_DIR, blobId.substring(0, 2));
         if (!dict.exists()) {
             dict.mkdir();

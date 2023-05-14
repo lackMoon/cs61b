@@ -1,18 +1,17 @@
 package gitlet;
 
 import java.io.File;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Objects;
+import java.util.*;
 
 import static gitlet.Utils.*;
 
-class Projects {
+class Gitlet {
 
     static Commit headCommit;
 
     static HashMap<String, String> staging;
+
+    static HashMap<String, String> remoteRepository;
 
     static String currentBranch;
 
@@ -22,7 +21,9 @@ class Projects {
     static final int STAGING_INDEX = 1;
     static final int BRANCH_INDEX = 2;
 
-    static final int CACHESIZE = 3;
+    static final int REMOTE_INDEX = 3;
+
+    static final int CACHESIZE = 4;
 
     static final String STAGED_REMOVAL = "00";
 
@@ -60,12 +61,11 @@ class Projects {
             if (Objects.isNull(branchName)) {
                 return null;
             }
-            File branch = join(Repository.LOCAL, branchName);
+            File branch = getBranch(branchName);
             if (!branch.exists()) {
                 return null;
             }
-            String headCommitId = Utils.readContentsAsString(branch);
-            Commit commit = Commit.acquire(headCommitId);
+            Commit commit = getBranchCommit(branch);
             headCommit = commit;
             cachedArray[COMMIT_INDEX] = true;
         }
@@ -74,7 +74,7 @@ class Projects {
 
     static void updateHeadCommit(String commitId) {
         String branchName = getCurrentBranch();
-        File branch = Utils.join(Repository.LOCAL, branchName);
+        File branch = getBranch(branchName);
         Utils.writeContents(branch, commitId);
         cachedArray[COMMIT_INDEX] = false;
     }
@@ -93,9 +93,70 @@ class Projects {
     }
 
     static void updateStagingArea(HashMap<String, String> stagingArea) {
-        File index = Repository.INDEX;
-        Utils.writeObject(index, stagingArea);
+        Utils.writeObject(Repository.INDEX, stagingArea);
         cachedArray[STAGING_INDEX] = false;
+    }
+
+    static HashMap<String, String> getRemoteInformation() {
+        if (!isCached(REMOTE_INDEX)) {
+            File remote = Repository.REMOTE;
+            if (!remote.exists()) {
+                return new HashMap<>();
+            }
+            HashMap<String, String> repository = Utils.readObject(remote, HashMap.class);
+            remoteRepository = repository;
+            cachedArray[REMOTE_INDEX] = true;
+        }
+        return remoteRepository;
+    }
+
+    static void updateRemoteInformation(HashMap<String, String> repository) {
+        Utils.writeObject(Repository.REMOTE, repository);
+        cachedArray[REMOTE_INDEX] = false;
+    }
+
+    static Set<String> getTrackedFiles() {
+        Set<String> trackedFiles = new TreeSet<>();
+        trackedFiles.addAll(getStagingArea().keySet());
+        trackedFiles.addAll(getHeadCommit().getAll());
+        return trackedFiles;
+    }
+
+    static Set<String> getUntrackedFiles() {
+        Set<String> untrackedFiles = new TreeSet<>();
+        untrackedFiles.addAll(plainFilenamesIn(Repository.CWD));
+        untrackedFiles.removeAll(getTrackedFiles());
+        return untrackedFiles;
+    }
+
+    static File getBranch(String branchName) {
+        return branchName.contains("/") ? join(Repository.REMOTES, branchName) : join(Repository.LOCAL, branchName);
+    }
+
+    static Commit getBranchCommit(File branch) {
+        return Commit.acquire(Utils.readContentsAsString(branch));
+    }
+
+    static void fetchSnapShots(Commit commit, HashSet<Commit> fetchCommits,
+                               HashMap<String, String> fetchBlobs) {
+        fetchCommits.add(commit);
+        for (String fileName : commit.getAll()) {
+            String blobId = commit.get(fileName);
+            fetchBlobs.put(blobId, Blob.content(blobId));
+        }
+    }
+
+    static void pushSnapShots(HashSet<Commit> fetchCommits, HashMap<String, String> fetchBlobs) {
+        for (Commit remoteCommit : fetchCommits) {
+            String commitId = remoteCommit.getCommitId();
+            File commitFile = join(Repository.COMMITS_DIR, commitId);
+            if (!commitFile.exists()) {
+                writeObject(commitFile, remoteCommit);
+            }
+        }
+        for (String blobId : fetchBlobs.keySet()) {
+            Blob.blob(blobId, fetchBlobs.get(blobId));
+        }
     }
 
     static String makeConflictMessage(String headCommitId, String mergeCommitId) {

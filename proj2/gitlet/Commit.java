@@ -5,6 +5,7 @@ import java.io.Serializable;
 import java.util.*;
 
 import static gitlet.Utils.*;
+import static gitlet.Gitlet.*;
 
 /** Represents a gitlet commit object.
  *  does at a high level.
@@ -38,7 +39,7 @@ public class Commit implements Serializable {
     public Commit(String message, Date timestamp) {
         this.message = message;
         this.timeStamp = timestamp;
-        Commit headCommit = Projects.getHeadCommit();
+        Commit headCommit = getHeadCommit();
         if (Objects.isNull(headCommit)) {
             this.commitFiles = new TreeMap<>();
             this.parentId = null;
@@ -65,6 +66,10 @@ public class Commit implements Serializable {
     }
     public void setMergedParentId(String mergedParentId) {
         this.mergedParentId = mergedParentId;
+    }
+
+    public boolean contains(String name) {
+        return commitFiles.containsKey(name);
     }
 
     public String get(String name) {
@@ -133,6 +138,8 @@ public class Commit implements Serializable {
         }
         return null;
     }
+
+
     public static Commit acquire(String commitId) {
         if (Objects.isNull(commitId)) {
             return null;
