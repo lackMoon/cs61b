@@ -130,8 +130,8 @@ class Gitlet {
     }
 
     static File getBranch(String branchName) {
-        return branchName.contains("/") ?
-                join(Repository.REMOTES, branchName) : join(Repository.LOCAL, branchName);
+        return branchName.contains("/")
+                ? join(Repository.REMOTES, branchName) : join(Repository.LOCAL, branchName);
     }
 
     static Commit getBranchCommit(File branch) {

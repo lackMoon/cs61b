@@ -4,6 +4,7 @@ import java.io.File;
 
 import java.util.*;
 
+import static gitlet.Gitlet.getHeadCommit;
 import static gitlet.Utils.*;
 import static gitlet.Gitlet.*;
 
@@ -476,13 +477,12 @@ public class Repository {
             error("Remote directory not found.");
         }
         changeRepository(repository);
-        File branch = getBranch(branchName);
-        if (!branch.exists()) {
-            Commit remoteHead = getHeadCommit();
-            Utils.writeObject(branch, remoteHead);
+        File branchFile = getBranch(branchName);
+        if (!branchFile.exists()) {
+            Utils.writeContents(branchFile, getHeadCommit().getCommitId());
             System.exit(0);
         }
-        String remoteCommitId = getBranchCommit(branch).getCommitId();
+        String remoteCommitId = getBranchCommit(branchFile).getCommitId();
         changeRepository(GITLET_DIR);
         Commit commit = getHeadCommit();
         String headCommitId = commit.getCommitId();
@@ -496,13 +496,14 @@ public class Repository {
                 break;
             }
             fetchSnapShots(commit, fetchCommits, fetchBlobs);
+            commit = Commit.acquire(commit.getParentId());
         }
         if (!isAncestor) {
             error("Please pull down remote changes before pushing.");
         }
         changeRepository(repository);
         pushSnapShots(fetchCommits, fetchBlobs);
-        reset(headCommitId);
+        Utils.writeContents(branchFile, headCommitId);
         changeRepository(GITLET_DIR);
     }
 }
