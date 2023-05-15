@@ -168,7 +168,7 @@ class Gitlet {
         conflictMessage.append(headContent);
         conflictMessage.append("=======");
         conflictMessage.append(mergeContent);
-        conflictMessage.appendRaw(">>>>>>>");
+        conflictMessage.append(">>>>>>>");
         return conflictMessage.toString();
     }
 
