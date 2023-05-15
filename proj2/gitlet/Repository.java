@@ -373,7 +373,6 @@ public class Repository {
         }
         boolean isConflict = mergeFile(fileSet, headCommit, mergeCommit, splitCommit);
         commit("Merged " + name + " into " + currentBranch + ".", new Date(), mergeId);
-        getHeadCommit().putAll();
         if (isConflict) {
             System.out.println("Encountered a merge conflict.");
         }
