@@ -169,7 +169,7 @@ class Gitlet {
         conflictMessage.append("=======");
         conflictMessage.append(mergeContent);
         conflictMessage.appendRaw(">>>>>>>");
-        return Blob.blob(conflictMessage.toString());
+        return conflictMessage.toString();
     }
 
     public static void makeCommitMessage(MessageBuilder builder, Commit commit) {

@@ -306,7 +306,9 @@ public class Repository {
                     if (!(Objects.isNull(mBlobId) || sBlobId.equals(mBlobId))) {
                         //present in split but not in head and modified in merged branch
                         isConflict = true;
-                        add(fileName, makeConflictMessage(null, mBlobId));
+                        writeContents(join(CWD, fileName),
+                                makeConflictMessage(null, mBlobId));
+                        add(fileName);
                     }
                 } else {
                     if (Objects.isNull(mBlobId)) {
@@ -316,7 +318,9 @@ public class Repository {
                         } else {
                             //present in split but not in merged branch and modified in head
                             isConflict = true;
-                            add(fileName, makeConflictMessage(cBlobId, null));
+                            writeContents(join(CWD, fileName),
+                                    makeConflictMessage(cBlobId, null));
+                            add(fileName);
                         }
                     } else {
                         if (sBlobId.equals(cBlobId) && !sBlobId.equals(mBlobId)) {
@@ -325,7 +329,9 @@ public class Repository {
                         } else if (!(sBlobId.equals(cBlobId) || sBlobId.equals(mBlobId))) {
                             //present in all,modified in head and merged branch
                             isConflict = true;
-                            add(fileName, makeConflictMessage(cBlobId, mBlobId));
+                            writeContents(join(CWD, fileName),
+                                    makeConflictMessage(cBlobId, mBlobId));
+                            add(fileName);
                         }
                     }
                 }
